@@ -1,0 +1,87 @@
+<!--
+
+Web interface to create a DB - 
+    using PHP and mysql
+    creates tables and stored functions
+    MUST use root / admin DB login
+    will throw Errors if cannot create DB
+
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <title>TCS Init DB</title>
+
+        <link rel="stylesheet" href="./css/TCS_postStyle.css" type="text/css" />
+    </head>
+
+    <body style="background-color: rgb(53, 17, 51); color: white" ;>
+        <div>
+            <h1>Initialize TCS DB - create tables and stored functions</h1>
+            <br />
+
+            <form action="./php/TCS_initDB.php" method="post">
+                <div class="row">
+                    <div class="column _3" style="padding: 6px; margin-left: 6px">DB NAME:</div>
+                    <div class="column _auto">
+                        <input class="tcs_txtInput" style="width: 60vw; margin: 0 auto" type="text" name="db_name" />
+                    </div>
+                    <div class="column _2"></div>
+                </div>
+
+                <br />
+                <br />
+
+                <div class="row">
+                    <div class="column _3" style="padding: 6px; margin-left: 6px">DB URL:</div>
+                    <div class="column _auto">
+                        <input class="tcs_txtInput" style="width: 60vw; margin: 0 auto" type="text" name="db_url" />
+                    </div>
+                    <div class="column _2"></div>
+                </div>
+
+                <br />
+
+                <br />
+
+                <div class="row">
+                    <div class="column _3" style="padding: 6px; margin-left: 6px">DB USER:</div>
+                    <div class="column _auto">
+                        <input class="tcs_txtInput" style="width: 60vw; margin: 0 auto" type="text" name="db_user" />
+                    </div>
+                    <div class="column _2"></div>
+                </div>
+
+                <br />
+
+                <br />
+
+                <div class="row">
+                    <div class="column _3" style="padding: 6px; margin-left: 6px">DB PWD:</div>
+                    <div class="column _auto">
+                        <input class="tcs_txtInput" style="width: 60vw; margin: 0 auto" type="text" name="db_pwd" />
+                    </div>
+                    <div class="column _2"></div>
+                </div>
+
+                <br />
+
+                <br />
+
+                <br />
+
+                <div class="row">
+                   
+                    <input id="tcs_submit" type="submit" value="INIT DB" />
+                    
+                </div>
+            </form>
+
+            <br />
+        </div>
+    </body>
+</html>

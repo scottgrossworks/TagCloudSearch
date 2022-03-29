@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <title>TCS Post</title>
+
+        <link rel="stylesheet" href="./css/TCS_postStyle.css" type="text/css" />
+    </head>
+
+    <body style="display:flex; background-color: rgb(96, 131, 89); color: white" ;>
+        <div>
+            <h1>DEL /Edit DB post -- doesn't change .html</h1>
+            
+
+            <div id="tcs_credentials"></div>
+
+            <BR>
+            <BR>
+
+            <form action="./php/TCS_edit.php" method="post">
+
+
+
+                <!-- ----------------------------- 
+                     PUT DB LOGIN CREDENTIALS HERE 
+                   ----------------------------- -->
+                   <input type="hidden" id="tcs_db_url" name="db_url" value="localhost">
+                   <input type="hidden" id="tcs_db_name" name="db_name" value="thursdb">
+                   <input type="hidden" id="tcs_db_user" name="db_user" value="testUser">
+                   <input type="hidden" id="tcs_db_pwd" name="db_pwd" value="testPwd">
+
+                   
+
+            
+                <div class="row">
+                <div class="column _3">URL ID: <input id="tcs_urlID" type="text" name="ID"/></div>
+                <div class="column _auto"></div>
+                </div>
+
+                <br />
+              
+                <p>TAGS: <br /><input class="tcs_txtInput" type="text" name="tags" /></p>
+                <br />
+
+
+                <!-- DELETE OR UPDATE -->
+                <div class="row">
+                    <div class="column _auto">&nbsp;</div>
+                    <div class="column _15"><input id="tcs_submit" type="submit" name="edit" value="EDIT" /></div>
+                    <div class="column _auto">&nbsp;</div>
+                    <div class="column _15"><input id="tcs_submit" type="submit" name="delete" value="DELETE" /></div>
+                    <div class="column _auto">&nbsp;</div>
+                </div>
+            </form>
+
+            <br />
+        </div>
+
+
+
+        <script>
+            
+            /*
+             * SHOW login credentials
+             */
+            let theDiv = document.getElementById("tcs_credentials");
+
+            let db_url = document.getElementById("tcs_db_url");
+            theDiv.innerHTML += ( db_url.name + ": " + db_url.value + "<BR>");
+
+            let db_name = document.getElementById("tcs_db_name");
+            theDiv.innerHTML += ( db_name.name + ": " + db_name.value + "<BR>");
+
+            let db_user = document.getElementById("tcs_db_user");
+            theDiv.innerHTML += ( db_user.name + ": " + db_user.value + "<BR>");
+            
+            let db_pwd = document.getElementById("tcs_db_pwd");
+            theDiv.innerHTML += ( db_pwd.name + ": " + db_pwd.value + "<BR>");
+
+        </script>
+
+    </body>
+</html>
