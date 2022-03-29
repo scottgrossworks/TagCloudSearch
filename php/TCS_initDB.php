@@ -31,6 +31,13 @@ function initialize( $db_name, $db_url, $db_user, $db_pwd ) {
         throw new Exception("ALL 4 DB login fields must != null");
     } 
 
+    $GLOBALS[ 'DB_NAME' ] = $db_name;
+        
+    $GLOBALS[ 'DB_URL' ] = $db_url;
+
+    $GLOBALS[ 'DB_USER' ] = $db_user;
+   
+    $GLOBALS[ 'DB_PWD' ] = $db_pwd;
     
     // echo login credentials
     printDBLogin();
