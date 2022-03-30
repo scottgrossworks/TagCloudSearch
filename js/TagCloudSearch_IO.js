@@ -14,9 +14,8 @@
 //               urls[] = [ ID , url ]
 //
 //             passed to each listener callback function
-//
+//      
 */
-
 
 import {  MAX_TAG_LENGTH,
           NEW_TAGS_LISTENERS,
@@ -68,6 +67,27 @@ export async function sendSearchToServer() {
                 throw new Error("no JSON data received from server");
             }
 
+            /*
+            TCS protocol in PHP
+            //
+            if everything is OK
+                $response = array(
+                    'tcs_status' => true,
+                    'tcs_message' => 'OK',
+                    'tcs_tags' => $theTags,
+                    'tcs_urls' => $theUrls
+                );
+            //
+            if there is an error
+                $response = array( 
+                'tcs_status' => false,
+                'tcs_message' => $errStr
+                );
+            */
+            if (returnData.tcs_status == false) {
+                throw new Error("ERROR returned from TagCloudSearch.php: " + returnData.tcs_message);
+            }
+
     } catch ( fetchError ) {
 
         if (fetchError == null) {
@@ -88,25 +108,11 @@ export async function sendSearchToServer() {
     // tcs_tags = array[] -- [tagName , popularity]
     // tcs_urls ==  array[] -- [ID , url] 
     //
-    // OPTIMIZATION:  make this round-trip faster -- get it right in the php and skip the validate
-    /*
-    try {
-        validateTAGS( returnData.tcs_tags );
-        validateURLS( returnData.tcs_urls );
-    } catch (parseError) {
-        console.error("Cannot parse return data: " + parseError.message);
-        return;
-    }
-    */
-
-    /*
-    //
     // CALLBACKS
     // call each registered callback function with the new tags / urls
     // don't let any individual error derail the group
     //
-    */
-
+ 
     /*
      * GOT new TAGS from server
      */

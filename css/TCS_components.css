@@ -191,9 +191,10 @@ ul.TCS_bricks li {
 
     height:min-content;
 
+    padding: 6px 5px 5px 5px !important;
     margin: 0px 6px 0px 0px;
-    letter-spacing: 0.05em;
-    padding-right:5px !important;
+    letter-spacing: 0.07em;
+
 }
     
 

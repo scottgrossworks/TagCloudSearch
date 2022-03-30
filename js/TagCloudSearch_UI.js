@@ -76,7 +76,7 @@ export function removeTierBricks() {
 export const newTagsListener_callback = (rawTags) => {
   
     // did the search come up empty?
-    if (rawTags.length == 0) {
+    if (rawTags == null || rawTags.length == 0) {
         return;
     }
 

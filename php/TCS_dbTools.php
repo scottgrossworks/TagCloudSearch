@@ -4,6 +4,14 @@
  * Create a TCS database using php and mysql
  * These functions create the tables and the stored functions used by TCS queries
  *  uses ROOT / ADMIN DB login -- modifies DB
+ *
+ * DELIMITER //
+ * 
+ *  ... define function here ...
+ * 
+ * // 
+ * 
+ * 
  */
 
 /* 
@@ -109,6 +117,10 @@ function createDB( $con, $DB_name ) {
  */
 function createTables( $DB_name ) {
 
+    // this is just a placeholder -- the default date for a TCS_post will be the date posted
+    // if no date is given in the create form
+    $theDate = date('Y-m-d');
+
     try {  
         $sql =
             "CREATE TABLE `config` (
@@ -132,7 +144,7 @@ function createTables( $DB_name ) {
             "CREATE TABLE `urls` (
                 `ID` int(11) NOT NULL AUTO_INCREMENT,
                 `url` varchar(128) NOT NULL,
-                `postDate` date NOT NULL DEFAULT current_timestamp(),
+                `postDate` date NOT NULL DEFAULT '$theDate', 
                 PRIMARY KEY (`ID`)
             ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COMMENT='URL for each blog post -- date added at post time';";
         
@@ -159,19 +171,45 @@ function createTables( $DB_name ) {
 
 /*
  * functon morePopular(tagName) -> increments popularity col for tagName - 
+ * 
+ *     $sql =
+        "USE `$DB_name`;
+        DROP FUNCTION IF EXISTS `tcs_morePopular`;
+DELIMITER //
+CREATE FUNCTION `tcs_morePopular` (eachTag varchar(32))
+        RETURNS INT DETERMINISTIC
+        BEGIN
+    
+        DECLARE pop INT;
+        SET @pop := 0;
+        
+        UPDATE tags 
+                SET tags.popularity = @pop := tags.popularity + 1
+                WHERE tags.tagName = eachTag;
+        
+        RETURN @pop;
+        END//
+DELIMITER ;";
+
  */
 function createMorePopular( $DB_name ) {
 
     try {  
+        // $sql = "USE `$DB_name`;";
+        // runSQL( $sql );
+
+        $sql = "DROP FUNCTION IF EXISTS `tcs_morePopular`;";
+        runSQL( $sql );
+
         $sql =
-        "CREATE OR REPLACE FUNCTION $DB_name.tcs_morePopular (eachTag varchar(32))
+        "CREATE FUNCTION tcs_morePopular (eachTag varchar(32))
         RETURNS INT DETERMINISTIC
         BEGIN
-        
+    
         DECLARE pop INT;
         SET @pop := 0;
         
-        UPDATE $DB_name.tags 
+        UPDATE tags 
                 SET tags.popularity = @pop := tags.popularity + 1
                 WHERE tags.tagName = eachTag;
         
@@ -179,6 +217,7 @@ function createMorePopular( $DB_name ) {
         END;";
 
         runSQL( $sql );
+
 
     } catch (Exception $error) {
         $msg = "MySQL ERROR creating tcs_morePopular(): " . $error->getMessage();
@@ -196,15 +235,18 @@ function createLessPopular( $DB_name ) {
         // functon lessPopular(tagName) -> decrements popularity col for tagName
         // keep popularity ABOVE 0
         // - returns popularity
-        $sql =
-        "CREATE OR REPLACE FUNCTION $DB_name.tcs_lessPopular (eachTag varchar(32))
+
+        $sql = "DROP FUNCTION IF EXISTS `tcs_lessPopular`;";
+        runSQL( $sql );
+
+        $sql = "CREATE FUNCTION tcs_lessPopular (eachTag varchar(32))
         RETURNS INT DETERMINISTIC
         BEGIN
         
         DECLARE pop INT;
         SET @pop := 0;
         
-        UPDATE $DB_name.tags 
+        UPDATE tags 
                 SET tags.popularity = @pop := tags.popularity - 1
                 WHERE tags.popularity > 0 AND tags.tagName = eachTag;
         
@@ -228,30 +270,34 @@ function createLessPopular( $DB_name ) {
 function createInsertOrPopular( $DB_name ) {
 
     try {
-            $sql =
-            "CREATE OR REPLACE FUNCTION $DB_name.tcs_insertOrPopular(eachTag varchar(32))
-            RETURNS INT DETERMINISTIC
-            
-            BEGIN
-            DECLARE popularity INT;
-            SET popularity = 1;
-            
-            IF EXISTS (SELECT * FROM $DB_name.tags WHERE tags.tagName = eachTag) 
-            THEN
-            SELECT $DB_name.tcs_morePopular(eachTag) INTO @popularity;
-            ELSE
-            INSERT INTO $DB_name.tags(tagName) VALUES (eachTag);
-            END IF;
-            
-            RETURN @popularity;
-            END;";
+        
+        $sql = "DROP FUNCTION IF EXISTS `tcs_insertOrPopular`;";
+        runSQL( $sql );
+
+        $sql =
+        "CREATE FUNCTION tcs_insertOrPopular(eachTag varchar(32))
+        RETURNS INT DETERMINISTIC
+        
+        BEGIN
+        DECLARE popularity INT;
+        SET popularity = 1;
+        
+        IF EXISTS (SELECT * FROM tags WHERE tags.tagName = eachTag) 
+        THEN
+        SELECT tcs_morePopular(eachTag) INTO @popularity;
+        ELSE
+        INSERT INTO tags(tagName) VALUES (eachTag);
+        END IF;
+        
+        RETURN @popularity;
+        END;";
     
-            runSQL( $sql );
+        runSQL( $sql );
             
-        } catch (Exception $error) {
-            $msg = "MySQL ERROR creating tcs_insertOrPopular(): " . $error->getMessage();
-            throw new Exception( $msg );
-        }
+    } catch (Exception $error) {
+        $msg = "MySQL ERROR creating tcs_insertOrPopular(): " . $error->getMessage();
+        throw new Exception( $msg );
+    }
 
 }
 
@@ -264,30 +310,33 @@ function createStoreNewUrl( $DB_name ) {
 
     try {
 
-            $sql =
-            "CREATE OR REPLACE FUNCTION $DB_name.tcs_storeNewUrl( inUrl VARCHAR(128), inDate VARCHAR(10) )
-            RETURNS INT DETERMINISTIC
-            BEGIN
-                DECLARE retID INT;
-                SET retID = 0;
-                SELECT (ID) INTO retID
-                    FROM $DB_name.urls
-                    WHERE url = inUrl;
-            
-                IF retID = 0 THEN
-                    INSERT INTO $DB_name.urls( url, postDate )
-                    VALUES (inUrl, inDate);
-                    SET retID = LAST_INSERT_ID();
-                ELSE
-                    UPDATE $DB_name.urls
-                    SET url = inUrl, postDate = inDate
-                    WHERE ID = retID;
-                END IF;
-            
-                RETURN retID;
-             END;";
+        $sql = "DROP FUNCTION IF EXISTS `tcs_storeNewUrl`;";
+        runSQL( $sql );
 
-            runSQL( $sql );
+        $sql =
+        "CREATE FUNCTION tcs_storeNewUrl( inUrl VARCHAR(128), inDate VARCHAR(10) )
+        RETURNS INT DETERMINISTIC
+        BEGIN
+            DECLARE retID INT;
+            SET retID = 0;
+            SELECT (ID) INTO retID
+                FROM urls
+                WHERE url = inUrl;
+        
+            IF retID = 0 THEN
+                INSERT INTO urls( url, postDate )
+                VALUES (inUrl, inDate);
+                SET retID = LAST_INSERT_ID();
+            ELSE
+                UPDATE urls
+                SET url = inUrl, postDate = inDate
+                WHERE ID = retID;
+            END IF;
+        
+            RETURN retID;
+            END;";
+
+        runSQL( $sql );
             
         } catch (Exception $error) {
             $msg = "MySQL ERROR creating tcs_storeNewUrl(): " . $error->getMessage();
@@ -304,22 +353,25 @@ function createStoreNewUrl( $DB_name ) {
 function createCreateNewTag( $DB_name ) {
 
     try {
-            $sql =
-            "CREATE OR REPLACE FUNCTION $DB_name.tcs_createNewTag( newID INT, eachTag VARCHAR(32) )
-            RETURNS INT DETERMINISTIC
-            BEGIN
-                DECLARE popularity INT;
-                SET popularity = 0;
-                
-                SELECT $DB_name.tcs_insertOrPopular( eachTag ) INTO @popularity;
-                
-                INSERT IGNORE INTO $DB_name.tags2urls( tags2urls.tagName, tags2urls.ID )
-                VALUES ( eachTag, newID);
+
+        $sql = "DROP FUNCTION IF EXISTS `tcs_createNewTag`;";
+        runSQL( $sql );
+
+        $sql = "CREATE FUNCTION tcs_createNewTag( newID INT, eachTag VARCHAR(32) )
+        RETURNS INT DETERMINISTIC
+        BEGIN
+            DECLARE popularity INT;
+            SET popularity = 0;
             
-                RETURN @popularity;
-             END;";
- 
-            runSQL( $sql );
+            SELECT tcs_insertOrPopular( eachTag ) INTO @popularity;
+            
+            INSERT IGNORE INTO tags2urls( tags2urls.tagName, tags2urls.ID )
+            VALUES ( eachTag, newID);
+        
+            RETURN @popularity;
+            END;";
+
+        runSQL( $sql );
             
     } catch (Exception $error) {
             $msg = "MySQL ERROR creating tcs_createNewTag(): " . $error->getMessage();
@@ -734,9 +786,9 @@ function storeToDB( $filename, $tags, $date ) {
         
         $db_url = $GLOBALS[ 'DB_URL' ];
   
-        $db_user = $GLOBALS['DB_USER'];
+        $db_user = $GLOBALS[ 'DB_USER' ] ;
        
-        $db_pwd = $GLOBALS['DB_PWD'];
+        $db_pwd = $GLOBALS[ 'DB_PWD' ];
     
         echo "<BR>DB_NAME: " . $db_name;
         echo "<BR>DB_URL: " . $db_url;

@@ -9,10 +9,10 @@
  *  does NOT have to be root / admin 
  */
 
-$DB_URL = "---db url---";
-$DB_NAME = "---db name---";
-$DB_USER = "---db user---";
-$DB_PWD = "---db pwd---";
+$DB_URL = "#####";
+$DB_NAME = "#####";
+$DB_USER = "#####";
+$DB_PWD = "#####";
 
 
 
@@ -108,12 +108,15 @@ try {
     // CALL DB functions
     //
     $theUrls = getUrlsFromTags( $tags );
-
+    //
+    // theUrls -- [ID][tagName][date]
+    //
     /* echo "<BR>GOT URLS FROM DB!!!";
     foreach( $theUrls as $eachRow ) {
         echo "<BR>$eachRow[0] -- $eachRow[1]";
     } */
-     // $theTags = [tag][popularity]
+    //
+    // $theTags = [tag][popularity]
     $theTags = []; // empty array - no tags
     if (count($theUrls) > 0) {
         $theTags = getTagsFromUrls( $theUrls );
@@ -129,7 +132,7 @@ try {
 
 
 } catch (Exception $error) {
-    $errStr = "<BR>TCS ERROR: " . $error->getMessage();
+    $errStr = "TCS ERROR: " . $error->getMessage();
     sendReturnData(null, null, $errStr);
     die();
 }
