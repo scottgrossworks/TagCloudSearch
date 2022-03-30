@@ -103,6 +103,8 @@
 
     display: block;
 
+    overflow-x: hidden;
+    
     margin: 0px auto 0px auto;
 
     width:75%;

@@ -13,7 +13,6 @@ import { MAX_TAG_LENGTH,
          TOTAL_TAGS, 
          SEARCH_TAGS,
          clearSearchWelcome,
-         printSearchTags, 
          } from "./TagCloudSearch_INIT.js"
 
 import { sendSearchToServer } from "./TagCloudSearch_IO.js"
@@ -335,8 +334,10 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
 
 
 /*
-// called whenever the search button is clicked
+// SEARCH BUTTON CLICK
 //
+// add the search text to SEARCH_TAGS
+// callback function -- execute a search on whatever is in SEARCH_TAGS
 */
 export function searchButtonListener_callback(searchBar, event) {
 
@@ -370,6 +371,7 @@ export function searchButtonListener_callback(searchBar, event) {
     // async html --> php --> DB and back
     sendSearchToServer().then(() => {
         // clear any search bricks and reset SEARCH_TAGS
+        searchBar.innerHTML = "";
         resetSearch();
     })
 
