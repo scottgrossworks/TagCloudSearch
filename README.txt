@@ -76,21 +76,14 @@ $DB_USER = "testUser";
 $DB_PWD = "testPwd";
 
 
+**************************************************************************************************************
 
+Your mileage on TCS_initDB may vary -- for GoDaddy for instance, you cannot create a database programmatically.
+You must use the create DB wizard to create an empty DB -- and add the root user to that DB -- 
+and THEN you can run TCS_initDB and create the TCS tables and stored functions and the rest of the .html files
+to add and edit TCS posts
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+**************************************************************************************************************
 
 
 The TCS search UI can work independently, sending search requests and displaying the return tags in tiers under the
@@ -206,10 +199,4 @@ i.e. fetch the URLS in a scrolling blog format in the main body of the page.  TC
     -- a post exitst, an is tagged with 'a', 'b', and 'c' -- you want to add 'd' and remove 'b' -- use TCS_edit
     -- calls TCS_dbTools functions
     -- USER must enter root / admin login to modify DB
-
-
-
-
-
-
 
