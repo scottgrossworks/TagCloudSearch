@@ -143,10 +143,6 @@ export async function sendSearchToServer() {
         }
     });
 
-  
-    // change the cursor back
-    document.body.style.cursor = "default";
-
 }
 
 

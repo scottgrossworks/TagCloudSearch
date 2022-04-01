@@ -9,6 +9,7 @@
 //
 */
 
+import { TCS_resetSearch } from "./TagCloudSearch_HTML.js";
 import { MAX_TAG_LENGTH,
          TOTAL_TAGS, 
          SEARCH_TAGS,
@@ -37,6 +38,10 @@ export function resetSearch() {
 
         clearTierBricks();
     }
+  
+    // change the cursor back
+    document.body.style.cursor = "default";
+
 }
  
 
@@ -150,7 +155,7 @@ function createCollapsedTier(TCS_main, tierIndex) {
     const icon = createTierIcon(false)
     newTier.appendChild(icon)
 
-    // -- click callback
+    // PREVIOUS TIER CLICK CALLBACK 
     // remove all the tiers
     // remove all the tags starting at the end until you get to the current tier
     newTier.addEventListener("click", function () {
@@ -253,7 +258,6 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
 
     // get the specific key
     let key = pressEvent.keyCode || pressEvent.charCode;    
-    //console.log({key});
 
     // backspace / delete
     // look to add back a brick if possible and remove the left arrow
@@ -274,7 +278,6 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
     // 188 == comma
     // 13 == enter
     let text = searchBar.innerHTML;
-    // console.log({text});
 
     let trimText = "";
     if ( key == 188 ) { // COMMA
@@ -284,8 +287,6 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
         trimText = text.replaceAll("<div><br></div>", "").trim();
         
     }
-
-    // console.log({trimText});
 
     if (trimText != "") { 
         
@@ -369,14 +370,14 @@ export function searchButtonListener_callback(searchBar, event) {
     // SEND THE SEARCH!
     // search for everything in SEARCH_TAGS
     // async html --> php --> DB and back
+    /*
     sendSearchToServer().then(() => {
         // clear any search bricks and reset SEARCH_TAGS
-        searchBar.innerHTML = "";
-        resetSearch();
+        TCS_resetSearch();
     })
+    */
+    sendSearchToServer();
 
-    // re-establish focus for more typing
-    searchBar.focus();
 }
 
 

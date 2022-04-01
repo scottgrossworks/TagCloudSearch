@@ -22,7 +22,7 @@ import { searchButtonListener_callback,
         if (tags.length == 0) throw new Exception("Empty tags sent to TCS_searchForTags");
 
         // clear search
-        resetSearch("");
+        // resetSearch("");
 
         // reload search tags
         tags.forEach( eachTag => { 
@@ -46,9 +46,10 @@ import { searchButtonListener_callback,
         const searchBar = document.getElementById("TCS_searchInput");
         if (searchBar != null) {
            
-            searchBar.innerHTML = message;
+            searchBar.innerHTML = (message == null) ? "" : message; 
             searchBar.classList.add("welcome");
             searchBar.focus();
+
           }
     }
 
