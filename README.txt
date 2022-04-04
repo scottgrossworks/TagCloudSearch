@@ -105,6 +105,7 @@ i.e. fetch the URLS in a scrolling blog format in the main body of the page.  TC
         -- Contains funcitons to submit a search through the UI automatically and trigger a registered callback upon
             receipt of return data
         -- Use these functions to program your website buttons and tabs
+        -- Make the bricks in your returned blog posts clickable and searchable
 
 
     ** /js/TagCloudSearch_INIT.js

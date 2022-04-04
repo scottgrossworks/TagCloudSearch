@@ -199,12 +199,12 @@ ul.TCS_bricks li {
     
 
 
-li.TCS_inactive {
-    background-color: var(--BRICK_BASE);
+.TCS_inactive {
+    background-color: var(--BRICK_BASE) !important;
 }
 
-li.TCS_active {
-    background-color: var(--BRICK_ACTIVE);
+.TCS_active {
+    background-color: var(--BRICK_ACTIVE) !important;
 }
 
 

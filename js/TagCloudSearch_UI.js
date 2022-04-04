@@ -9,7 +9,7 @@
 //
 */
 
-import { TCS_resetSearch } from "./TagCloudSearch_HTML.js";
+import { togglePageBricks } from "./TagCloudSearch_HTML.js";
 import { MAX_TAG_LENGTH,
          TOTAL_TAGS, 
          SEARCH_TAGS,
@@ -106,6 +106,39 @@ export const newTagsListener_callback = (rawTags) => {
     newTier = createBricksTier(index + 1, newTags)
     TCS_main.appendChild(newTier)
 }
+
+
+
+
+
+// called when a brick in the tag cloud is clicked
+// add / remove it from the search, depending on whether it's already there
+// and toggle the color
+export function clickBrick_tier(theLI) {
+    const theUL = document.getElementById("TCS_searchBricks")
+    const searchBar = theUL.parentElement.children[1]
+
+    clearSearchWelcome( searchBar );
+
+    let tagName = theLI.innerText;
+
+    let brickAdded = addBrickToSearch( theUL, tagName );
+    if (brickAdded) {
+        adjustSearchBar(theUL, null);
+    } else {
+        removeBrickFromSearch( theUL, tagName );
+        adjustSearchBar(theUL, null);
+    }
+
+    toggleTierBrick( tagName );
+
+    togglePageBricks( tagName );
+
+    searchBar.focus()
+}
+
+
+
 
 
 
@@ -293,9 +326,14 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
         // WE GOT ONE!
 
         if ( addBrickToSearch( theUL, trimText) ) {
+           
+            // turn on all matching bricks in blog post
+            togglePageBricks( trimText );
             
-            toggleTierBrick(theUL, trimText);
-            
+            // turn on tier brick
+            toggleTierBrick( trimText );
+
+            // make sure search bar doesn't grow too large
             adjustSearchBar(theUL, null);
         }
 
@@ -421,6 +459,7 @@ function addBrickToSearch( theUL, tagName ) {
 
     let li = document.createElement("li");
     li.innerHTML = tagName;
+    li.innerText = tagName;
     li.classList.add("TCS_active");
     li.classList.add("TCS_searchBrick");
 
@@ -432,6 +471,8 @@ function addBrickToSearch( theUL, tagName ) {
 
     return true;
 }
+
+
 
 /*
  * remove a brick from the search bar and SEARCH_TAGS
@@ -554,12 +595,15 @@ function adjustSearchBar(theUL, ratio) {
 // called when a brick in the search bar is clicked
 // turn brick inactive and remove it to the search
 function clickBrick_search(theUL, theLI) {
+    
     let tagName = theLI.innerText;
 
     removeBrickFromSearch(theUL, tagName);
     adjustSearchBar(theUL, null);
 
-    toggleTierBrick(tagName);
+    toggleTierBrick( tagName );
+
+    togglePageBricks( tagName );
 
     // let searchBar = document.getElementById("TCS_searchInput");
     let searchBar = theUL.parentElement.children[1];
@@ -568,55 +612,36 @@ function clickBrick_search(theUL, theLI) {
 
 
 
-// called when a brick in the tag cloud is clicked
-// add / remove it from the search, depending on whether it's already there
-// and toggle the color
-function clickBrick_tier(theLI) {
-    const theUL = document.getElementById("TCS_searchBricks")
-    const searchBar = theUL.parentElement.children[1]
+function findTierBrick( tagName ) {
 
-    clearSearchWelcome( searchBar );
-
-    let tagName = theLI.innerText
-
-    let brickAdded = addBrickToSearch( theUL, tagName );
-    if (brickAdded) {
-        adjustSearchBar(theUL, null);
-    } else {
-        removeBrickFromSearch( theUL, tagName );
-        adjustSearchBar(theUL, null);
+    const theUL = document.getElementById("TCS_tierBricks")
+    
+    // iterate through all tier bricks
+    for (let i = 0; i < theUL.children.length; i++) {
+        let theBrick = theUL.children[i];
+         if (theBrick.innerText == tagName) { // FOUND IT!
+            return theBrick;
+        }
     }
-
-    toggleTierBrick(tagName)
-
-    searchBar.focus()
+    return null; // NOT FOUND
 }
-
-
-
 
 
 
 //
 // toggle between TCS_active and TCS_inactive
 //
-function toggleTierBrick(tagName) {
-    const theUL = document.getElementById("TCS_tierBricks")
+function toggleTierBrick( trimText ) {
 
-    for (let i = 0; i < theUL.children.length; i++) {
-        let theLI = theUL.children[i]
-        let testTag = theLI.innerText
-        if (testTag == tagName) {
-            // FOUND IT
-            let isActive = theLI.classList.contains("TCS_active")
-            if (isActive) {
-                // turn it off
-                theLI.classList.replace("TCS_active", "TCS_inactive")
-            } else {
-                // turn it on
-                theLI.classList.replace("TCS_inactive", "TCS_active")
-            }
-            break
-        }
+    let theLI = findTierBrick( trimText );
+    if (theLI == null) return;  // should NOT happen
+
+    let isActive = theLI.classList.contains("TCS_active")
+    if (isActive) {
+        // turn it off
+        theLI.classList.replace("TCS_active", "TCS_inactive")
+    } else {
+        // turn it on
+        theLI.classList.replace("TCS_inactive", "TCS_active")
     }
 }

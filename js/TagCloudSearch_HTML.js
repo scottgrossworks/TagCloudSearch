@@ -6,10 +6,74 @@
 */
 import { searchButtonListener_callback,
          resetSearch,
+         clickBrick_tier,
          addSearchText } from "./TagCloudSearch_UI.js"
 
 
-    
+
+
+    /*
+    // A brick inside a blog post is clicked
+    // treat it like a tier brick
+    */
+   export function TCS_clickBrick_post( theLI ) {
+        // pass the click on to the search tier and click that brick too
+        // this will call togglePageBricks() on ALL the rest of the
+        // occurrences of the brick on the page
+        clickBrick_tier( theLI );
+   }
+
+
+
+
+   /*
+   // helper functions for integrating blog post bricks with search bricks
+   //
+   */
+   export function togglePageBricks( tagText ) {
+
+        let theULs = document.querySelectorAll('.TCS_bricks');
+        if (theULs == null) return; // should NOT happen;
+        
+        Array.from( theULs ).forEach( eachUL => { 
+
+            if (eachUL.id == "TCS_searchBricks") return; // skip the search bricks
+            if (eachUL.id == "TCS_tierBricks") return; // skip the tier bricks
+
+            // THESE are the blog post bricks
+            let numBricks = eachUL.children.length;
+            let i = 0;
+            for (i; i < numBricks; i++) {
+                
+                let theBrick = eachUL.children[ i ];
+
+                 // we have a matching brick to the one clicked
+                if (theBrick.innerText == tagText) {
+                    // console.log("MATCH=" + theBrick.innerText + "==" + tagText + "->" + (theBrick.innerText == tagText));
+                    toggleBrickColor( theBrick );
+                    break;
+                }
+            }
+
+        });
+   }
+
+
+
+   function toggleBrickColor( theBrick ) {
+    // toggle the brick color
+    let isActive = theBrick.classList.contains("TCS_active")
+        if (isActive) {
+            // console.log("turning it off");
+            theBrick.classList.replace("TCS_active", "TCS_inactive")
+        } else {
+            // console.log("turning it on");
+            theBrick.classList.replace("TCS_inactive", "TCS_active")
+        }
+   }
+
+
+
     /*
     // Given an [] of search tags-- add them to the TCS UI and submit a search
     // simulate a click on the search button -- returned tags will go to any registered newTags_listeners
@@ -105,6 +169,17 @@ import { searchButtonListener_callback,
 
                 // ....http....
                 let newNode = html2DOM( request.responseText );
+            
+
+                // add click listeners to all blog post bricks
+                let theBricks = newNode.querySelectorAll('.TCS_inactive');
+                Array.from( theBricks ).forEach( eachBrick => { 
+        
+                    eachBrick.addEventListener("click", function () {
+                        TCS_clickBrick_post( eachBrick );              
+                     });
+                });
+
                 theResults.appendChild( newNode );
 
             } catch (exception) {

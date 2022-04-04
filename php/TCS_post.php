@@ -33,18 +33,25 @@ function findRootDir( $folder ) {
     }
 }
 
-
-
 /*
  * 2/2022 -- filename is a rand between 10000 --> 99999 .html
  */
-function createLocalHTML($url, $caption, $date, $tags) {
+function createFilename() {
 
     $folder = $GLOBALS['FOLDER'];
     if (! str_ends_with($folder, "/")) $folder .= "/";
     
     $filename = $folder . rand(10000, 99999) . ".html";
     echo "<BR>CREATING FILENAME=$filename";
+
+    return $filename;
+}
+
+
+/*
+ * 
+ */
+function createLocalHTML($urlID, $filename, $url, $caption, $date, $tags) {
     
     try {
     
@@ -52,7 +59,7 @@ function createLocalHTML($url, $caption, $date, $tags) {
 
             // 
             //
-            $wrapper = "<div class='TCS_blogPost'>";
+            $wrapper = "<div class='TCS_blogPost' id='$urlID'>";
             fwrite( $theFile, $wrapper );
 
             //
@@ -167,19 +174,23 @@ try {
     if (! isDBInit( $db_name )) throw new Exception("Database $db_name not initialized");
     // DB MUST BE initialized, tables and stored functions exist
 
-
-
-    // create the local .html content that will be pasted into the
-    // main webpage upon return of the TCS search
-    $filename = createLocalHTML($url, $caption, $date, $tags);
-    echo "<BR>FILE CREATED: $filename";
+    // create the file name where the blog post will be stored
+    $filename = createFilename();
 
     // store to DB:
     //   filename of local html
     //   date assoc with original content URL
     //   tags
-    storeToDB( $filename, $tags, $date );
-    echo "<BR>ALL DATA STORED TO DB";
+    $urlID = storeToDB( $filename, $tags, $date );
+    echo "<BR>URL STORED TO DB: " . $urlID;
+
+    // create the local .html content that will be pasted into the
+    // main webpage upon return of the TCS search
+    createLocalHTML($urlID, $filename, $url, $caption, $date, $tags);
+
+    // if no Exceptions are thrown...
+    echo "<BR>FILE CREATED: $filename";
+
 
     closeConnection();
     

@@ -686,6 +686,7 @@ function runSQL( $sql ) {
  * 
  * rely on stored DB functions created in initDB()
  *
+ * returns new unique file ID
  */
 function storeToDB( $filename, $tags, $date ) {
 
@@ -714,6 +715,8 @@ function storeToDB( $filename, $tags, $date ) {
         $sql = "SELECT $db_name.tcs_createNewTag($newID,'$eachTag')";
         runSQL( $sql );
     }
+
+    return $newID;
 
 }
 
