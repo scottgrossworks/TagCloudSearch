@@ -113,7 +113,7 @@ button.TCS_searchButton {
     padding:0px;
     border:0;
 
-    opacity:0.6;
+    opacity:0.5;
 
     background-image: url("../img/search.svg");
     background-repeat: no-repeat;
@@ -234,8 +234,8 @@ hr.TCS_hr {
 
     transform: translate(15px, 5px);
     background-color:var(--TIER_COLOR);
-    -webkit-mask:  url(../img/plus.svg) no-repeat 50% 50%;
-    mask: url(../img/plus.svg) no-repeat 50% 50%;
+    -webkit-mask:  url(../img/icon.svg) no-repeat 50% 50%;
+    mask: url(../img/icon.svg) no-repeat 50% 50%;
 
     cursor: pointer;
 }

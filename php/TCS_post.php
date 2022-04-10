@@ -40,8 +40,13 @@ function createFilename() {
 
     $folder = $GLOBALS['FOLDER'];
     if (! str_ends_with($folder, "/")) $folder .= "/";
-    
-    $filename = $folder . rand(10000, 99999) . ".html";
+
+    do {
+        $filename = $folder . rand(10000, 99999) . ".html";
+  
+        // try again if filename already exists
+    } while (file_exists($filename));
+
     echo "<BR>CREATING FILENAME=$filename";
 
     return $filename;

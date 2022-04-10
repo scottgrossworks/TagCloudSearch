@@ -565,16 +565,18 @@ function getTagsFromUrls( $theUrls ) {
 
 
 /*
- *
+ *  rawTags is a big string with delimiters -- # or , we have to take them out
+ *  and return an array of tags
  */
 function processTags( $rawTags ) {
 
-    $tags = [];
+    $finalTags = [];
 
     if ( $rawTags == null || $rawTags == "" ) {
-        return $tags;
+        return $finalTags;
     }
-    
+   
+    $tags = [];
     if ($rawTags[0] == '#') {
         $tags = explode("#", $rawTags);
     
@@ -588,24 +590,49 @@ function processTags( $rawTags ) {
         $tags = explode(",", $rawTags);
     }
 
+    // now convert tags into finalTags by removing any
+    // empty strings and sorting
     if (count($tags) == 0) {
         throw new Exception("tags cannot be parsed");
 
     } else {
-        while (( $tags[0] == "" ) || ($tags[0] == " ")) {
-            array_shift($tags);
-        }
 
         $index = 0;
         foreach($tags as $eachTag) {
-            $tags[ $index ] = trim($eachTag);
-            $index++;
+
+            // trim any whitespace
+            $theTag = trim($eachTag);
+            $len = strlen($theTag);
+            
+            if ( $len > 0 ) {
+                // add the tag
+                $finalTags[ $index ] = $theTag;
+                $index++;
+            }
         }
         
-        asort( $tags, SORT_STRING);
+        asort( $finalTags, SORT_STRING);
     }
 
-   return $tags;
+    // printTags( $finalTags );
+    return $finalTags;
+}
+
+
+/*
+ * helper function
+ */
+function printTags( $tags ) {
+    echo "<BR>PRINTING TAGS";
+    
+    $index = 0; 
+    foreach($tags as $eachTag) {
+        
+        $len = strlen($eachTag);
+        echo "<BR>TAGS[$index]==$eachTag==" . $len;
+        
+        $index++;
+    }
 }
 
 

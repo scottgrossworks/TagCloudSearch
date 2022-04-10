@@ -90,7 +90,6 @@ try {
 
        $ID_found = $result->fetch_array(MYSQLI_NUM);
        if (! $ID_found) throw new Exception("URL ID not found: $urlID");
-
         
         // these are the NEW tags
         $rawTags = $_POST['tags'];
@@ -109,9 +108,14 @@ try {
         // tags: create new tag or increment popularity
         // tags2urls: create new mapping tag --> ID from tcs_storeNewUrl
         foreach ($newTags as $eachTag) {
-            $sql = "SELECT $db_name.tcs_createNewTag($urlID,'$eachTag')";
-            runSQL( $sql );
-            echo "<BR>CREATED NEW TAG $eachTag";
+
+            // final check just to make sure we don't add empty tags
+            $len = strlen($eachTag);
+            if ($len > 0) {
+                $sql = "SELECT $db_name.tcs_createNewTag($urlID,'$eachTag')";
+                runSQL( $sql );
+                echo "<BR>CREATED NEW TAG $eachTag";
+            }
         }
 
      
