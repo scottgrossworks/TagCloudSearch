@@ -9,10 +9,10 @@
  *  does NOT have to be root / admin 
  */
 
-$DB_URL = "107.180.24.253";
-$DB_NAME = "sgw_tcs_4_2022";
-$DB_USER = "tcs_user";
-$DB_PWD = "tcs_pwd";
+$DB_URL = "XXX.XXX.XXX.XXX";
+$DB_NAME = "XXXXXXXXX";
+$DB_USER = "XXXXX";
+$DB_PWD = "XXXXXXX";
 
 
 
