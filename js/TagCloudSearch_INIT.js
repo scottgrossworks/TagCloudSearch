@@ -23,7 +23,7 @@ import { validateTAGS } from "./TagCloudSearch_IO.js";
 // GLOBAL DATA STRUCTURES
 //
 */
-export const MAX_TAG_LENGTH = 16; // chars 
+export const MAX_TAG_LENGTH = 15; // chars 
 
 /*
 * TOTAL_TAGS = [][]
@@ -150,6 +150,8 @@ function initTags(TCS_main) {
 }
 
 /*
+// BUILD THE SEARCH BAR / BUTTON / START BRICKS
+//
 // div -- TCS_main
 //  - div TCS_tier
 //    -- wrapper
@@ -198,6 +200,7 @@ function initSearchBar(TCS_main) {
     searchButton.classList.add("column");
     searchButton.classList.add("_1");
     searchButton.classList.add("TCS_searchButton");
+    searchButton.id = "TCS_searchBarButton";
     newTier.appendChild( searchButton );
 
    
@@ -213,20 +216,23 @@ function initSearchBar(TCS_main) {
     //
     searchBar.addEventListener("keydown", (pressEvent) => {
 
+        // get the specific key
+        let key = pressEvent.keyCode || pressEvent.charCode;    
+
         // is the search text already too long?
         // stop adding new chars and return
         if (searchBar.innerHTML.length >= MAX_TAG_LENGTH) {
 
-            // get the specific key
-            let key = pressEvent.keyCode || pressEvent.charCode;    
             if (( key == 8 ) || ( key == 46 )) {  // backspace / delete
                     return true;
-            
+
             } else {
                 pressEvent.preventDefault();
                 return false;
             }
+       
         }
+
         return true;
     });
 
@@ -278,6 +284,11 @@ function setSearchWelcome(searchBar) {
         searchBar.innerHTML = searchWelcome;
     }
 }
+
+
+
+
+
 
 
 /*

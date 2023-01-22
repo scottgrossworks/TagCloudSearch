@@ -92,11 +92,11 @@ export async function sendSearchToServer() {
 
         if (fetchError == null) {
             console.log("TCS ERROR in sendSearchToServer: fetchError == null");
-            console.log("RESPONSE=" + response.body);
+            if (response != null) console.log("RESPONSE=" + response.body);
 
         } else {
             console.log("TCS ERROR in sendSearchToServer: " + SEARCH_URL);
-            console.log("RESPONSE=" + response.body);
+            if (response!= null) console.log("RESPONSE=" + response.tcs_message);
             console.error( fetchError );
         }
         return;

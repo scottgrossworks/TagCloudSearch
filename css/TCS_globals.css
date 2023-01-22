@@ -1,8 +1,8 @@
 
  /* GLOBAL VARIABLES */
  :root {
-
-     --BRICK_BASE: rgb(1, 102, 255);
+     --BRICK_BASE: blue;
+     --BRICK_POST: rgb(1, 102, 255);
      --BRICK_ACTIVE: green;
      --BRICK_ACTIVE_LIGHT: rgb(6, 158, 6);
      

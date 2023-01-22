@@ -7,14 +7,14 @@
 
 /* simple tags styles */
 #TCS_main {
-    width:100%;
+    width: 100%;
     max-width: 1200px;
 
     display: flex;
-    flex-wrap:wrap !important;
-    
+    flex-wrap: wrap !important;
+
     padding: 0.5em 0.5em;
-   
+
     color: var(--SEARCH_COLOR);
     background-color: var(--PRIMARY_BKG);
     border: 2px solid var(--TIER_COLOR);
@@ -32,7 +32,7 @@
 */
 @media screen and (max-width: 799px) {
     #TCS_main {
- 
+
         font-size: var(--MOBILE_FONT-SIZE);
         font-weight: var(--MOBILE_FONT-WEIGHT);
     }
@@ -48,7 +48,7 @@
 
 #TCS_bricksWrapper {
 
-    display:flex;
+    display: flex;
     padding-bottom: 0px;
     overflow: hidden;
     white-space: nowrap;
@@ -58,19 +58,19 @@
 
 #TCS_backArrow {
 
-    width:60%;
-    height:60%;
+    width: 60%;
+    height: 60%;
 
-    padding:0px;
-    margin:auto 0px auto 0px;
-    background-color:var(--BRICK_ACTIVE);
-    -webkit-mask:  url(../img/arrow.svg) no-repeat 50% 50%;
+    padding: 0px;
+    margin: auto 0px auto 0px;
+    background-color: var(--BRICK_ACTIVE);
+    -webkit-mask: url(../img/arrow.svg) no-repeat 50% 50%;
     mask: url(../img/arrow.svg) no-repeat 50% 50%;
 }
 
 
 #TCS_searchInput {
-    
+
     align-self: flex-end;
 
     padding: 10px 0px 0px 1px;
@@ -78,12 +78,13 @@
     box-sizing: border-box;
     border: none;
     outline: none;
-
+   
     cursor: text;
+
     opacity: 1;
 
     color: var(--SEARCH_COLOR);
-    background-color: var(--SEARCH_BKG);    
+    background-color: var(--SEARCH_BKG);
 }
 
 .input {
@@ -110,10 +111,10 @@ button.TCS_searchButton {
     display: inline-flex;
 
     margin: auto 0px auto auto;
-    padding:0px;
-    border:0;
+    padding: 0px;
+    border: 0;
 
-    opacity:0.5;
+    opacity: 0.5;
 
     background-image: url("../img/search.svg");
     background-repeat: no-repeat;
@@ -122,14 +123,20 @@ button.TCS_searchButton {
     background-color: transparent;
 
     cursor: pointer;
-    height:25px;
-    width:25px;
-    max-width:25px;
+
+    height: 25px;
+    width: 25px;
+    max-width: 25px;
 }
 
 button.TCS_searchButton:hover {
     opacity: 1;
-  }
+}
+
+
+
+
+
 
 
 
@@ -143,9 +150,9 @@ ul.TCS_bricks {
     padding: 0px 0px 7px 0px;
     margin: 0px 0px 0px 0px;
 
-    
+
     text-align: center;
-    
+
     text-decoration: none;
     color: var(--BRICK_TEXT);
     font-family: var(--PRIMARY_FONT-FAMILY);
@@ -153,7 +160,6 @@ ul.TCS_bricks {
     font-weight: var(--PRIMARY_FONT-WEIGHT);
 
     cursor: pointer;
-
 }
 
 
@@ -165,11 +171,11 @@ ul.TCS_bricks li {
     box-sizing: border-box;
     flex-wrap: nowrap;
 
-    
+
     margin: 10px 6px 0px 0px;
     padding: 0.5em 0.5em 0.6em 0.5em;
     border-radius: 3px;
-    
+
 
 }
 
@@ -189,14 +195,14 @@ ul.TCS_bricks li {
     font-size: var(--SMALL_FONT-SIZE);
     font-weight: var(--SMALL_FONT-WEIGHT);
 
-    height:min-content;
+    height: min-content;
 
     padding: 6px 5px 5px 5px !important;
     margin: 0px 6px 0px 0px;
     letter-spacing: 0.07em;
 
 }
-    
+
 
 
 .TCS_inactive {
@@ -211,14 +217,16 @@ ul.TCS_bricks li {
 hr.TCS_hr {
 
     margin: auto 0px 0px 2px;
+       
     cursor: pointer;
+        
     border-bottom: 7px dashed var(--BRICK_BASE);
-    
+
     transform: translateY(-45%);
     border-top: none;
     border-left: none;
     border-right: none;
-    
+
 
 }
 
@@ -228,23 +236,24 @@ hr.TCS_hr {
     overflow: visible;
 
 
-    height:25px !important;
+    height: 25px !important;
     width: 25px !important;
 
 
     transform: translate(15px, 5px);
-    background-color:var(--TIER_COLOR);
-    -webkit-mask:  url(../img/icon.svg) no-repeat 50% 50%;
+    background-color: var(--TIER_COLOR);
+    -webkit-mask: url(../img/icon.svg) no-repeat 50% 50%;
     mask: url(../img/icon.svg) no-repeat 50% 50%;
-
+      
     cursor: pointer;
+
 }
 
 
 @media screen and (min-width:500px) and (max-width: 699px) {
- 
+
     .TCS_tierIcon {
-        
+
         transform: translate(10px, 5px);
     }
 }
@@ -254,9 +263,9 @@ hr.TCS_hr {
 //
 */
 @media screen and (max-width: 499px) {
- 
+
     .TCS_tierIcon {
-        
+
         transform: translate(5px, 5px);
     }
 }

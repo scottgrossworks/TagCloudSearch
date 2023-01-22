@@ -7,7 +7,8 @@
 import { searchButtonListener_callback,
          resetSearch,
          clickBrick_tier,
-         addSearchText } from "./TagCloudSearch_UI.js"
+         addSearchText,
+      } from "./TagCloudSearch_UI.js"
 
 
 
@@ -113,7 +114,6 @@ import { searchButtonListener_callback,
             searchBar.innerHTML = (message == null) ? "" : message; 
             searchBar.classList.add("welcome");
             searchBar.focus();
-
           }
     }
 

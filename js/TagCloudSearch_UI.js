@@ -27,6 +27,7 @@ import { sendSearchToServer } from "./TagCloudSearch_IO.js"
  * clear the SEARCH_TAGS
  * clear the search bricks
  * reset the search bar
+ * reset the cursor to default pointer
  */
 export function resetSearch() {
    
@@ -38,10 +39,8 @@ export function resetSearch() {
 
         clearTierBricks();
     }
-  
-    // change the cursor back
-    document.body.style.cursor = "default";
 
+    normalCursor();
 }
  
 
@@ -78,7 +77,7 @@ export function removeTierBricks() {
  * [1][second tier of tags added, tag, tag...]  
  */
 export const newTagsListener_callback = (rawTags) => {
-  
+
     // did the search come up empty?
     if (rawTags == null || rawTags.length == 0) {
         return;
@@ -105,6 +104,7 @@ export const newTagsListener_callback = (rawTags) => {
 
     newTier = createBricksTier(index + 1, newTags)
     TCS_main.appendChild(newTier)
+    
 }
 
 
@@ -321,8 +321,24 @@ export function searchBarListener_callback( wrapper, theUL, searchBar, pressEven
         
     }
 
-    if (trimText != "") { 
+
+    if (trimText != "") { // trimText contains search bar input from user
+  
         
+// 11/2022
+// trying to catch invalid input into search bar
+// one step towards preventing SQL injection attack
+// be careful not to reject tags containing a space ' '
+// 
+
+    if (! (isAlphaNum(trimText))) {
+            searchBar.innerHTML = "";
+            pressEvent.preventDefault();
+            alert("Only letters and numbers allowed in TCS search");
+            return false;
+        }
+
+
         // WE GOT ONE!
 
         if ( addBrickToSearch( theUL, trimText) ) {
@@ -403,7 +419,7 @@ export function searchButtonListener_callback(searchBar, event) {
     }
 
     // change the cursor
-    document.body.style.cursor = "wait";
+    waitCursor();
     
     // SEND THE SEARCH!
     // search for everything in SEARCH_TAGS
@@ -417,10 +433,6 @@ export function searchButtonListener_callback(searchBar, event) {
     sendSearchToServer();
 
 }
-
-
-
-
 
 
 
@@ -445,6 +457,49 @@ export function addSearchText(theText) {
     return true
 }
 
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// CHANGE THE CURSOR TO WAIT DURING SEARCH AND BACK AGAIN
+// 
+// 1/2023 -- this is still a work in progress
+//
+////////////////////////////////////////////////////////////////////////////////////
+
+function waitCursor() {
+
+    document.body.classList.add('searchWaiting');
+
+    // have to force the button
+    let searchButton = document.getElementById("TCS_searchBarButton");
+    searchButton.style.cursor = "wait";
+}
+
+
+function normalCursor() {
+
+    document.body.classList.remove('searchWaiting');
+    
+    // have to force the button
+    let searchButton = document.getElementById("TCS_searchBarButton");
+    searchButton.style.cursor = "pointer";
+}
+
+
+
+
+/*
+ * does the search bar input contain only valid alphanumeric chars 
+ */
+function isAlphaNum( text ) {
+
+    const letterNumber = /^[0-9a-zA-Z\s]+$/;
+    return (text.match( letterNumber ));
+}
+    
 
 /*
  *
