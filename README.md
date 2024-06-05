@@ -1,5 +1,4 @@
-###################################################################################################
-#
+
 #  Tag Cloud Search
 #
 #  An effective way to organize related website content spanning multiple categories
@@ -13,8 +12,6 @@
 #       scottgross.works
 #       scottgrossworks@gmail.com  
 #
-###################################################################################################
-
 TCS is a Javascript UI component consisting of a search bar and a tag cloud containing
 clickable bricks, and a system of PHP scripts for adding and searching for website content
 in a backend SQL db.  Bricks are the searchable units in the TCS system.  Each piece of 
