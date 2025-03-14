@@ -215,24 +215,22 @@ function initSearchBar(TCS_main) {
     // SEARCH BAR KEY DOWN
     //
     searchBar.addEventListener("keydown", (pressEvent) => {
-
-        // get the specific key
-        let key = pressEvent.keyCode || pressEvent.charCode;    
-
-        // is the search text already too long?
-        // stop adding new chars and return
+        let key = pressEvent.keyCode || pressEvent.charCode;
+        
+        // Prevent default action for Enter to avoid inserting a new line
+        if (key === 13) {
+            pressEvent.preventDefault();
+        }
+        
+        // Existing check for maximum tag length
         if (searchBar.innerHTML.length >= MAX_TAG_LENGTH) {
-
-            if (( key == 8 ) || ( key == 46 )) {  // backspace / delete
-                    return true;
-
+            if ((key == 8) || (key == 46)) {  // allow backspace / delete
+                return true;
             } else {
                 pressEvent.preventDefault();
                 return false;
             }
-       
         }
-
         return true;
     });
 
