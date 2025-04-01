@@ -175,7 +175,6 @@ try {
                  $db_user,
                  $db_pwd );  
 
-    $GLOBALS["DB_NAME"] = $db_name;
     if (! isDBInit( $db_name )) throw new Exception("Database $db_name not initialized");
     // DB MUST BE initialized, tables and stored functions exist
 

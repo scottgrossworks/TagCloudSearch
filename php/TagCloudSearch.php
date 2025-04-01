@@ -1,4 +1,3 @@
-
 <?php require './TCS_dbTools.php'; 
 
 
@@ -82,32 +81,29 @@ try {
         throw new Exception("Did not receive POST request");
     }
 
-    //
-    // RECEIVE html form input data
-    // tags may be invalid -- will process in dbTools
-    // tcs_tags = tag,tag,tag,tag 
-    //
-    $rawTags = $_POST['tcs_tags'];
-    if (! $rawTags || count($rawTags) == 0) throw new Exception("Empty Tags");
-
     
-
     // connect to DB
     //
-    connectToDB( $DB_URL, 
+    connectToDB( $DB_NAME,
+                 $DB_URL, 
                  $DB_USER,
                  $DB_PWD );  
 
-    $GLOBALS["DB_NAME"] = $DB_NAME;
+                 
     if (! isDBInit( $DB_NAME )) throw new Exception("Database $DB_NAME not initialized");
     // DB MUST BE initialized, tables and stored functions exist
 
 
-    // 03/2025 -- new, faster SQL query with INNER JOINs for each tag
-    // 06/2022 -- using NEW FUNCTION for smaller result set
+    // RECEIVE html form input data
+    // tags may be invalid -- will call processTags() in dbTools
+    // tcs_tags = tag,tag,tag,tag 
     //
-    // must match ALL tag bricks
+    $rawTags = $_POST['tcs_tags'];
+
+    // 03/2025 -- new, faster SQL query with INNER JOINs for each tag
+    // must match ALL tag bricks    
     $theUrls = getUrls_matchAllTags( $rawTags );
+    // [ [ index, url ], [index, url], .... ]
     // may be empty
 
     
@@ -136,7 +132,8 @@ try {
 
 } catch (Exception $error) {
     $errStr = "TCS ERROR: " . $error->getMessage();
-    sendReturnData(null, null, $errStr);
+    error_log("TagCloudSearch.php: " . $errStr);
+    sendReturnData([], [], $errStr);
     die();
 }
 

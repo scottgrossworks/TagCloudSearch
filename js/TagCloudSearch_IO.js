@@ -38,38 +38,8 @@ import {  MAX_TAG_LENGTH,
 //
 // implement a callback function that delivers the URLS upon request from main page
 //
-*/
-export async function sendSearchToServer() {
-
-    if (SEARCH_TAGS.length == 0) throw new Error("Cannot send empty SEARCH_TAGS to server");
-
-    let response = null;
-    let formData = SEARCH_TAGS.join(',');
-    let returnData = null;
-
-
-    try {
-
-        // ASYNC wait for HTTP response
-        response = await fetch( SEARCH_URL, {
-            method: 'POST',
-            headers: { 'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-            credentials: 'include',
-            body: 'tcs_tags=' + formData
-        });
-
-            // parse using JSON
-            // looking for json errors? try response.text() for raw data
-            returnData  = await response.json();
-
-            // check for null data
-            if (returnData == null) {
-                throw new Error("no JSON data received from server");
-            }
-
-            /*
-            TCS protocol in PHP
-            //
+//           TCS protocol in PHP
+//
             if everything is OK
                 $response = array(
                     'tcs_status' => true,
@@ -77,73 +47,71 @@ export async function sendSearchToServer() {
                     'tcs_tags' => $theTags,
                     'tcs_urls' => $theUrls
                 );
-            //
+//
             if there is an error
                 $response = array( 
                 'tcs_status' => false,
                 'tcs_message' => $errStr
                 );
-            */
-            if (returnData.tcs_status == false) {
-                throw new Error("ERROR returned from TagCloudSearch.php: " + returnData.tcs_message);
-            }
+*/
+export async function sendSearchToServer() {
+    if (SEARCH_TAGS.length == 0) throw new Error("Cannot send empty SEARCH_TAGS to server");
 
-    } catch ( fetchError ) {
+    let formData = SEARCH_TAGS.join(',');
 
-        if (fetchError == null) {
-            console.log("TCS ERROR in sendSearchToServer: fetchError == null");
-            if (response != null) console.log("RESPONSE=" + response.body);
+    try {
+        const response = await fetch( SEARCH_URL, {
+            method: 'POST',
+            headers: { 'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            credentials: 'include',
+            body: 'tcs_tags=' + formData
+        });
 
-        } else {
-            console.log("TCS ERROR in sendSearchToServer: " + SEARCH_URL);
-            if (response!= null) console.log("RESPONSE=" + response.tcs_message);
-            console.error( fetchError );
-        }
-        return;
-    }
-
-    // OTHERWISE....WE GOT RETURN DATA.....
-    // returnData attributes should be arrays -- even empty ones -- not nulls
-    //
-    // tcs_tags = array[] -- [tagName , popularity]
-    // tcs_urls ==  array[] -- [ID , url] 
-    //
-    // CALLBACKS
-    // call each registered callback function with the new tags / urls
-    // don't let any individual error derail the group
-    //
- 
-    /*
-     * GOT new TAGS from server
-     */
-    NEW_TAGS_LISTENERS.forEach( (listener) => {
-        // pass the new tags to each registered callback     
-        try {
-            listener( returnData.tcs_tags );
-      
-        } catch (listenerError) {
-            console.error("Error in tags listener function: " + listener);
-            console.log("ERROR: " + listenerError.message);
-        }
-    });
 
     
-    /*
-     * GOT new URLS from server
-     */
-    NEW_URLS_LISTENERS.forEach( (listener) => {
-
-        // pass the new urls to each registered callback 
+        // Get raw response as text FIRST 
+        const rawText = await response.text();
+        // console.log("RAW RESPONSE FROM SERVER:" , rawText);
+        
+        // THEN parse JSON
+        let returnData;
         try {
-            listener( returnData.tcs_urls );
-      
-        } catch (listenerError) {
-            console.error("ERROR in url listener function: " + listener);
-            console.log("ERROR: " + listenerError.message);
+            returnData = JSON.parse(rawText);
+        } catch (parseError) {
+            console.error("JSON PARSING ERROR:", parseError, "RAW RESPONSE:", rawText);
+            throw new Error("JSON parsing error: " + parseError.message);
         }
-    });
 
+        if (!returnData) {
+            throw new Error("no JSON data received from server");
+        }
+
+        if (returnData.tcs_status === false) {
+            throw new Error("ERROR returned from TagCloudSearch.php: " + returnData.tcs_message);
+        }
+
+        // CALLBACKS
+        NEW_TAGS_LISTENERS.forEach((listener) => {
+            try {
+                listener(returnData.tcs_tags);
+            } catch (listenerError) {
+                console.error("Error in tags listener:", listenerError);
+            }
+        });
+
+        NEW_URLS_LISTENERS.forEach((listener) => {
+            try {
+                listener(returnData.tcs_urls);
+            } catch (listenerError) {
+                console.error("Error in urls listener:", listenerError);
+            }
+        });
+
+    } catch (fetchError) {
+        console.error("TCS ERROR in sendSearchToServer:", fetchError);
+    }
 }
+
 
 
 

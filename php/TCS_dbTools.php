@@ -28,26 +28,26 @@ $MAX_TAG_LENGTH = 15;
 
 
 /*
+ * Ensures that every time getDBConnection() is called, the correct database is explicitly selected.
  */
 function getDBConnection() {
-    if (!isset($GLOBALS["DB_CONNECTION"])) {
-        $conn = new mysqli($GLOBALS["DB_URL"], 
-                         $GLOBALS["DB_USER"], 
-                         $GLOBALS["DB_PWD"], 
-                         $GLOBALS["DB_NAME"]);
-                         
-        if ($conn->connect_error) {
-            throw new Exception("Connection failed: " . $conn->connect_error);
-        }
-        
-        // Enable prepared statements
-        $conn->set_charset("utf8mb4");
-        $conn->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-        
-        $GLOBALS["DB_CONNECTION"] = $conn;
+   
+    if (! isset($GLOBALS["DB_CONNECTION"])) {
+        throw new Exception("No database connection available");
     }
-    return $GLOBALS["DB_CONNECTION"];
+
+    $con = $GLOBALS["DB_CONNECTION"];
+    
+    // Select the DB if not already selected
+    if (! $con->select_db($GLOBALS["DB_NAME"])) {
+        throw new Exception("Cannot select DB: " . $GLOBALS["DB_NAME"]);
+    }
+
+    return $con;
 }
+
+
+
 
 /*
  */
@@ -547,12 +547,15 @@ function getUrlsFromTags( $tags ) {
 * temporary tables, improving performance and ensuring compatibility 
 * with shared hosting environments like GoDaddy.
 *
-* @param array $searchTags  An array of tag names (strings) to search for.
+* @param array $rawTags     The string of tags passed in from the client
 * @return array             An array of associative arrays representing the matched URLs.
-*
+* [ [1, '/TCS_POSTS/12121.html'], [2, '/TCS_POSTS/12345.html'], ... ]
 * @throws Exception         If no tags are provided, or if DB is not properly configured.
 */
-function getUrls_matchAllTags($searchTags) {
+function getUrls_matchAllTags($rawTags) {
+
+    $searchTags = processTags( $rawTags );
+
     if (empty($searchTags)) {
         throw new Exception("Empty tags passed to getUrlsFromTags()");
     }
@@ -607,9 +610,15 @@ function getUrls_matchAllTags($searchTags) {
         // Get result
         $result = $stmt->get_result();
         
-        // Fetch all results
-        $theUrls = $result->fetch_all(MYSQLI_ASSOC);
+        // Fetch all rows
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
         
+        // convert to simple return format format
+        $theUrls = [];
+        foreach ($rows as $row) {
+            $theUrls[] = [(int)$row['id'], $row['url']];
+        }
+
         // Clean up
         $result->free();
         $stmt->close();
@@ -660,7 +669,7 @@ function getTagsFromUrls($theUrls) {
         }
         
         $types = str_repeat('i', count($theUrls));
-        $ids = array_column($theUrls, 'ID');
+        $ids = array_column($theUrls, 0);  // Changed from 'id' to 0 since $theUrls is numeric array
         $stmt->bind_param($types, ...$ids);
         
         if (!$stmt->execute()) {
@@ -956,7 +965,7 @@ function storeToDB( $filename, $tags, $date ) {
      * username and password must have ADMIN ROOT ACCESS
      * $connect = new mysqli("localhost", "username", "password");
      */
-    function connectToDB( $DB_url, $DB_user, $DB_pwd) {
+    function connectToDB( $DB_name, $DB_url, $DB_user, $DB_pwd) {
 
         try{
             
@@ -966,15 +975,22 @@ function storeToDB( $filename, $tags, $date ) {
                 throw new Exception("Connection failed: " . $con->connect_error);
             }
 
-    
+                // Enable prepared statements
+            $con->set_charset("utf8mb4");
+            $con->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+
+
         } catch (Exception $error) {
             $GLOBALS['DB_CONNECTION'] = null;
-            throw new Exception("Cannot connect to DB: " . $error->getMessage());
+            throw new Exception("connectToDB() cannot connect to DB: " . $error->getMessage());
         }
-            
+    
+
         // set important global variables before returning
         //
         $GLOBALS['DB_CONNECTION'] = $con;
+        
+        $GLOBALS["DB_NAME"] = $DB_name;
         $GLOBALS["DB_URL"] = $DB_url;
         $GLOBALS["DB_USER"] = $DB_user;
         $GLOBALS["DB_PWD"] = $DB_pwd;
@@ -1023,11 +1039,11 @@ function storeToDB( $filename, $tags, $date ) {
      * Proper error logging - include timestamp, message and context
      */
 
-    function logError($message, $context = []) {
+    function logError($message) {
         error_log(json_encode([
             'timestamp' => date('Y-m-d H:i:s'),
             'message' => $message,
-            'context' => $context
+            'context' => []
         ]));
     }
 
