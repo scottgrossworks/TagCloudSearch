@@ -487,17 +487,12 @@ function initDB( $DB_name ) {
   * --> returns array[][] -- [ID][url] 
   */
 function getUrlsFromTags( $tags ) {
-
     if (count($tags) == 0) throw new Exception("Empty tags passed to getUrlsFromTags()");
 
     $theDB = $GLOBALS['DB_NAME'];
     if ($theDB == null) throw new Exception("DB_NAME global variable not set");
 
-
     // BUILD THE SQL QUERY
-  
-    // $firstTag = $tags[0];
-    // echo "<BR>tags[0]=" . $firstTag . " COUNT=" . count($tags);
     $safeTag = $theDB->real_escape_string( array_shift( $tags ) );
     $allTagsSQL = "WHERE tags.tagName='$safeTag'";
 
@@ -507,8 +502,6 @@ function getUrlsFromTags( $tags ) {
     } 
 
     $allTagsSQL .= ";";
-    //echo "<BR>GET URLS FROM TAGS: $allTagsSQL";
-
 
     // build the query -- insert db name 
     $sql = "SELECT DISTINCT urls.ID, urls.url
@@ -553,7 +546,6 @@ function getUrlsFromTags( $tags ) {
 * @throws Exception         If no tags are provided, or if DB is not properly configured.
 */
 function getUrls_matchAllTags($rawTags) {
-
     $searchTags = processTags( $rawTags );
 
     if (empty($searchTags)) {
@@ -577,7 +569,7 @@ function getUrls_matchAllTags($rawTags) {
         $conn = getDBConnection();
         
         // Create the base query with placeholders
-        $baseQuery = "SELECT DISTINCT urls.* FROM urls";
+        $baseQuery = "SELECT DISTINCT urls.ID, urls.url FROM urls";
         
         // Add JOIN clauses with placeholders
         $params = [];
@@ -616,7 +608,7 @@ function getUrls_matchAllTags($rawTags) {
         // convert to simple return format format
         $theUrls = [];
         foreach ($rows as $row) {
-            $theUrls[] = [(int)$row['id'], $row['url']];
+            $theUrls[] = [(int)$row['ID'], $row['url']];  // Using correct case for ID
         }
 
         // Clean up
@@ -669,7 +661,7 @@ function getTagsFromUrls($theUrls) {
         }
         
         $types = str_repeat('i', count($theUrls));
-        $ids = array_column($theUrls, 0);  // Changed from 'id' to 0 since $theUrls is numeric array
+        $ids = array_column($theUrls, 0);  // Get first element of each [ID, url] pair
         $stmt->bind_param($types, ...$ids);
         
         if (!$stmt->execute()) {
@@ -677,7 +669,13 @@ function getTagsFromUrls($theUrls) {
         }
         
         $result = $stmt->get_result();
-        $theTags = $result->fetch_all(MYSQLI_ASSOC);
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        
+        // Convert to array of [tagName, popularity] pairs
+        $theTags = [];
+        foreach ($rows as $row) {
+            $theTags[] = [$row['tagName'], (int)$row['popularity']];
+        }
         
         $result->free();
         $stmt->close();
