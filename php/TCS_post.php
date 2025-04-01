@@ -3,8 +3,7 @@
 <body>
 
 <!-- begin PHP -->
-<?php require 'TCS_dbTools.php';
-      
+<?php require './TCS_dbTools.php';       
 
 $FOLDER = null;
 
@@ -87,7 +86,7 @@ function createLocalHTML($urlID, $filename, $url, $caption, $date, $tags) {
             //
             //
             fwrite( $theFile, "<BR><ul class='TCS_bricks'>" );
-            foreach ($tags as &$eachTag) {
+            foreach ($tags as $eachTag) {
                 fwrite( $theFile, "<li class='TCS_inactive'>$eachTag</li>" );
             } 
             fwrite( $theFile, "</ul></div>" ); // close the tag list and the wrapper 
@@ -117,17 +116,18 @@ try {
         throw new Exception("Did not receive POST request");
     }
 
+    $theDB = getDBConnection();
 
     //
     // get hidden form DB login credentials
     //
-    $db_url = $_POST['db_url'];
-    $db_name = $_POST['db_name'];
-    $db_user = $_POST['db_user'];
-    $db_pwd = $_POST['db_pwd'];
+    $db_url = SQL_sanitize( $_POST['db_url'] );
+    $db_name = SQL_sanitize( $_POST['db_name'] );
+    $db_user = SQL_sanitize( $_POST['db_user'] );
+    $db_pwd = SQL_sanitize( $_POST['db_pwd'] );
 
-    if (($db_url == null) || ($db_name == null) || ($db_user == null) || ($db_pwd == null))
-        throw new Exception("Did not receive DB login credentials");
+    if (! ($db_url && $db_name && $db_user && $db_pwd))
+        throw new Exception("Did not receive valid DB login credentials");
 
     $GLOBALS["DB_URL"] = $db_url;
     $GLOBALS["DB_NAME"] = $db_name;
@@ -139,16 +139,16 @@ try {
     // html form input data
     // some of these are mandatory -- will throw exception later if empty
     //
-    $url = $_POST['url'];
-    $caption = $_POST['caption'];
-    $date = $_POST['date'];
-    $folder = $_POST['folder'];
-    $rawTags = $_POST['tags'];
+    $url = SQL_sanitize( $_POST['url'] );
+    $caption = SQL_sanitize( $_POST['caption'] );
+    $date = SQL_sanitize( $_POST['date'] );
+    $folder = SQL_sanitize( $_POST['folder'] );
+    $rawTags = SQL_sanitize( $_POST['tags'] );
     $tags = processTags( $rawTags );
 
-    if ( ($url == null) || ($caption == null) || ($folder == null) ) {
+    if (! ($url && $caption && $folder) ) {
         throw new Exception("FORM must include at least URL, CAPTION, and root FOLDER");
-    } else if (($date == null)) {
+    } else if (! $date) {
         $date = todaysDate();
     }
     

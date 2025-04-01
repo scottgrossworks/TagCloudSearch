@@ -3,7 +3,7 @@
 <body>
 
 <!-- begin PHP -->
-<?php require 'TCS_dbTools.php';
+<?php require './TCS_dbTools.php'; 
       
 
 /* suppress pesky warning msgs */
@@ -26,28 +26,24 @@ try {
     // html form input data
     // 
     //
-    $urlID = (isset($_POST['ID'])) ? $_POST['ID'] : null;
-    if ($urlID == null) throw new Exception( "Must supply URL ID" );
-
-    
+    $theID = (isset($_POST['ID'])) ? $_POST['ID'] : null;
+    $urlID = SQL_sanitize( $theID );
+    if (! $urlID) throw new Exception( "Must supply URL ID" );
 
     $editButton = (isset($_POST['edit'])) ? $_POST['edit'] : null;
-    $deleteButton = (isset($_POST['delete'])) ? $_POST['delete'] : null;
- 
+    $deleteButton = (isset($_POST['delete'])) ? $_POST['delete'] : null; 
     if (! ($editButton || $deleteButton)) throw new Exception( "ONLY accepts edit or delete commands" );
-
-
 
     //
     // get hidden form DB login credentials
     //
-    $db_url = $_POST['db_url'];
-    $db_name = $_POST['db_name'];
-    $db_user = $_POST['db_user'];
-    $db_pwd = $_POST['db_pwd'];
+    $db_url = SQL_sanitize( $_POST['db_url']) ;
+    $db_name = SQL_sanitize( $_POST['db_name'] );
+    $db_user = SQL_sanitize( $_POST['db_user'] );
+    $db_pwd = SQL_sanitize( $_POST['db_pwd'] );
 
-    if (($db_url == null) || ($db_name == null) || ($db_user == null) || ($db_pwd == null))
-        throw new Exception("Did not receive DB login credentials");
+    if (! ($db_url && $db_name && $db_user && $db_pwd))
+        throw new Exception("Did not receive valid DB login credentials");
 
     
     // connect to DB

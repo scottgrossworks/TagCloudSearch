@@ -9,10 +9,10 @@
  *  does NOT have to be root / admin 
  */
 
-$DB_URL = "XXX.XXX.XXX.XXX";
-$DB_NAME = "XXXXXXXXX";
-$DB_USER = "XXXXX";
-$DB_PWD = "XXXXXXX";
+$DB_URL = "107.180.24.253";
+$DB_NAME = "sgw_tcs_4_2022";
+$DB_USER = "tcs_user";
+$DB_PWD = "tcs_pwd";
 
 
 
@@ -84,12 +84,11 @@ try {
 
     //
     // RECEIVE html form input data
+    // tags may be invalid -- will process in dbTools
     // tcs_tags = tag,tag,tag,tag 
     //
     $rawTags = $_POST['tcs_tags'];
-    $tags = processTags( $rawTags );
-
-    if (count($tags) == 0) throw new Exception("Tags field cannot be empty");
+    if (! $rawTags || count($rawTags) == 0) throw new Exception("Empty Tags");
 
     
 
@@ -104,17 +103,21 @@ try {
     // DB MUST BE initialized, tables and stored functions exist
 
 
+    // 03/2025 -- new, faster SQL query with INNER JOINs for each tag
+    // 06/2022 -- using NEW FUNCTION for smaller result set
     //
-    // CALL DB functions
-    //
-    $theUrls = getUrlsFromTags( $tags );
+    // must match ALL tag bricks
+    $theUrls = getUrls_matchAllTags( $rawTags );
+    // may be empty
+
+    
     //
     // theUrls -- [ID][tagName][date]
     //
-    /* echo "<BR>GOT URLS FROM DB!!!";
-    foreach( $theUrls as $eachRow ) {
-        echo "<BR>$eachRow[0] -- $eachRow[1]";
-    } */
+    // echo "<BR>GOT URLS FROM DB!!!";
+    // foreach( $theUrls as $eachRow ) {
+    //     echo "<BR>$eachRow[0] -- $eachRow[1]";
+    // }
     //
     // $theTags = [tag][popularity]
     $theTags = []; // empty array - no tags

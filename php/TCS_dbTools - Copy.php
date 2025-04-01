@@ -30,23 +30,8 @@ $MAX_TAG_LENGTH = 15;
 /*
  */
 function getDBConnection() {
-    if (!isset($GLOBALS["DB_CONNECTION"])) {
-        $conn = new mysqli($GLOBALS["DB_URL"], 
-                         $GLOBALS["DB_USER"], 
-                         $GLOBALS["DB_PWD"], 
-                         $GLOBALS["DB_NAME"]);
-                         
-        if ($conn->connect_error) {
-            throw new Exception("Connection failed: " . $conn->connect_error);
-        }
-        
-        // Enable prepared statements
-        $conn->set_charset("utf8mb4");
-        $conn->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-        
-        $GLOBALS["DB_CONNECTION"] = $conn;
-    }
-    return $GLOBALS["DB_CONNECTION"];
+
+    return $GLOBALS[ "DB_CONNECTION" ];
 }
 
 /*
@@ -126,7 +111,7 @@ function createDB( $con, $DB_name ) {
     } catch (Exception $error) {
 
         $err_msg = $error->getMessage();
-        logError( $err_msg );
+        error_log( $err_msg );
         throw new Exception( "Cannot create DB: " . $err_msg);
     }
 
@@ -536,95 +521,126 @@ function getUrlsFromTags( $tags ) {
 
 
 
-/*
-* 3/2025
-* Retrieve all blog post URLs that are tagged with ALL the given tags.
-* MUST MATCH ALL TAGS
-*
-* This function performs an optimized SQL query using INNER JOINs—one per tag—
-* to ensure that only blog posts which are associated with all search tags 
-* are returned. Unlike the previous implementation, it does not rely on 
-* temporary tables, improving performance and ensuring compatibility 
-* with shared hosting environments like GoDaddy.
-*
-* @param array $searchTags  An array of tag names (strings) to search for.
-* @return array             An array of associative arrays representing the matched URLs.
-*
-* @throws Exception         If no tags are provided, or if DB is not properly configured.
-*/
-function getUrls_matchAllTags($searchTags) {
-    if (empty($searchTags)) {
-        throw new Exception("Empty tags passed to getUrlsFromTags()");
+ /*
+  *
+  * 6/2022 -- CHANGED search function -- now returned posts must contain ALL search
+  * tags -- adding more tags makes the search MORE specific -- so searching for 
+  * 'tagA' 'tagB' will only return posts tagged with BOTH tagA and tagB
+  *
+  * Create an SQL temporary table for each search tag containing the blog post IDs using that tag
+  * then JOIN all temporary tables to produce one result representing only the IDs shared in
+  * common by ALL search tag tables
+  *
+  * $tags is an array of tagNames from processTags()
+  *
+  * --> returns array[][] -- [ID][url] 
+  */
+  function getUrls_matchAllTags( $searchTags ) {
+
+    if (count( $searchTags ) == 0) throw new Exception("Empty tags passed to getUrlsFromTags()");
+
+    $theDB = $GLOBALS['DB_NAME'];
+    if ($theDB == null) throw new Exception("DB_NAME global variable not set");
+
+    // 8/2022
+    // WE HAVE TO DO SEPARATE SQL STATEMENTS WITH runSQL()
+    // BATCHING EVERYTHING TOGETHER IN ONE STRING NOT WORKING
+
+    // MAKE SURE WE ARE USING THE NAMED DB FOR THIS SESSION
+    $theSQL = "USE $theDB;";
+    runSQL( $theSQL );
+
+    // BUILD THE SQL QUERY
+    //
+    $tempTables = array();
+    $tagCounter = 0;
+    // for each tag in $searchTags
+    foreach ($searchTags as $eachTag) {
+
+        // build a temporary table and fill it with the matching IDs
+        $tableName = "temp_" . ++$tagCounter;
+        array_push( $tempTables, $tableName );
+
+        $createTableSQL = "
+        CREATE TEMPORARY TABLE $tableName (
+        ID INT PRIMARY KEY
+        );";
+      
+        // RUN CREATE TABLE
+        runSQL( $createTableSQL );
+
+        $insertSQL = "
+        INSERT INTO $tableName(ID) 
+        SELECT tags2urls.ID
+        FROM tags2urls
+        WHERE tags2urls.tagName = '$eachTag';
+        ";
+
+        // RUN CREATE TABLE
+        runSQL( $insertSQL );
     }
 
-    // Sanitize input tags to prevent SQL injection
-    $sanitizedTags = [];
-    foreach ($searchTags as $tag) {
-        $safeTag = SQL_sanitize($tag);
-        if ($safeTag) {
-            $sanitizedTags[] = $safeTag;
-        }
-    }
-    if (count($sanitizedTags) == 0) {
-        return [];
-    }
+    // create a list of temp tables
+    //    
+    // SELECT *
+    // FROM urls
+    //  INNER JOIN temp_1 ON temp_1.ID = urls.ID
+    //  INNER JOIN temp_2 ON temp_2.ID = urls.ID
+    // ORDER BY urls.ID ASC; 
+    //
 
-    try {
-        // Get database connection
-        $conn = getDBConnection();
-        
-        // Create the base query with placeholders
-        $baseQuery = "SELECT DISTINCT urls.* FROM urls";
-        
-        // Add JOIN clauses with placeholders
-        $params = [];
-        $types = str_repeat('s', count($sanitizedTags)); // 's' for string parameters
-        $joinClauses = '';
-        
-        foreach ($sanitizedTags as $index => $tag) {
-            $joinClauses .= " INNER JOIN tags2urls t{$index} ON urls.ID = t{$index}.ID AND t{$index}.tagName = ?";
-            $params[] = $tag;
-        }
-        
-        $baseQuery .= $joinClauses . " ORDER BY urls.ID DESC";
-        
-        // Prepare the statement
-        $stmt = $conn->prepare($baseQuery);
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
-        }
-        
-        // Bind parameters if we have any
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        
-        // Execute the statement
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        
-        // Get result
-        $result = $stmt->get_result();
-        
-        // Fetch all results
-        $theUrls = $result->fetch_all(MYSQLI_ASSOC);
-        
-        // Clean up
-        $result->free();
-        $stmt->close();
-        
-        return $theUrls;
-        
-    } catch (Exception $e) {
-        logError("Error in getUrls_matchAllTags: " . $e->getMessage());
-        throw $e;
+    $joinSQL = "";
+    forEach ($tempTables as $eachTempTable) {
+
+        $joinSQL = $joinSQL . "INNER JOIN $eachTempTable ON $eachTempTable.ID = urls.ID" . " ";
     }
+    
+    $selectSQL = "SELECT * FROM $theDB.urls " . $joinSQL . ";"; 
+
+    // RUN SELECT STATEMENT
+    $result = runSQL( $selectSQL );
+
+    // process results
+    $theUrls = $result -> fetch_all( MYSQLI_NUM );
+    $result -> free_result();
+
+    return $theUrls;
 }
 
 
 
 
+
+
+
+
+/*
+    $testSQL = "
+    USE sgw_tcs_4_2022;
+    CREATE TEMPORARY TABLE temp_1 (
+        ID INT PRIMARY KEY
+        );
+        INSERT INTO temp_1(ID) 
+        SELECT tags2urls.ID
+        FROM sgw_tcs_4_2022.tags2urls
+        WHERE tags2urls.tagName = 'comics';
+        
+        
+        CREATE TEMPORARY TABLE temp_2 (
+        ID INT PRIMARY KEY
+        );
+        INSERT INTO temp_2(ID) 
+        SELECT tags2urls.ID
+        FROM sgw_tcs_4_2022.tags2urls
+        WHERE tags2urls.tagName = 'daffy duck';
+
+        ";
+        
+  
+    $theUrls = array(  0 => "/TCS_POSTS/47658.html" ,
+                        1 => "/TCS_POSTS/72957.html" );   
+
+*/
 
 
 
@@ -639,46 +655,56 @@ INNER JOIN testdb.urls AS urls ON urls.ID = map.ID
 WHERE urls.ID = 21 or urls.ID =2 or urls.ID = 24 or urls.ID = 23 or urls.ID = 8;
 *
 */
-function getTagsFromUrls($theUrls) {
-    if (empty($theUrls)) {
+function getTagsFromUrls( $theUrls ) {
+    
+    $whereSql = "WHERE urls.ID=";
+
+    $numRows = count($theUrls);
+    if ( $numRows == 0 ) { // no rows -- bad
         throw new Exception("Empty urls passed to getTagsFromUrls()");
+
+    } else if ( $numRows == 1 ) { // only one url
+        $whereSql .= $theUrls[0][0];
+    
+    } else { // multiple urls
+        $whereSql .= $theUrls[0][0];
+    
+        $rowNum = 0;
+        foreach ($theUrls as $eachUrl) {
+            
+            if ($rowNum == 0) {
+                $rowNum++;
+                continue;
+            }
+
+            $whereSql .= " OR urls.ID=$eachUrl[0]";
+        } 
     }
 
-    try {
-        $conn = getDBConnection();
-        $placeholders = str_repeat('?,', count($theUrls) - 1) . '?';
-        
-        $sql = "SELECT DISTINCT theTags.tagName, theTags.popularity
-                FROM tags as theTags
-                INNER JOIN tags2urls AS map ON map.tagName = theTags.tagName
-                INNER JOIN urls AS urls ON urls.ID = map.ID
-                WHERE urls.ID IN ($placeholders)";
-                
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
-        }
-        
-        $types = str_repeat('i', count($theUrls));
-        $ids = array_column($theUrls, 'ID');
-        $stmt->bind_param($types, ...$ids);
-        
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        
-        $result = $stmt->get_result();
-        $theTags = $result->fetch_all(MYSQLI_ASSOC);
-        
-        $result->free();
-        $stmt->close();
-        
-        return $theTags;
-        
-    } catch (Exception $e) {
-        logError("Error in getTagsFromUrls: " . $e->getMessage());
-        throw $e;
-    }
+    $whereSql .= ";";
+
+    $theDB = $GLOBALS['DB_NAME'];
+
+    // build the query -- insert the db name
+    $sql = "SELECT DISTINCT theTags.tagName, theTags.popularity
+    FROM $theDB.tags as theTags
+    INNER JOIN $theDB.tags2urls AS map ON map.tagName = theTags.tagName
+    INNER JOIN $theDB.urls AS urls ON urls.ID = map.ID
+     ";
+
+    // append the WHERE clause that we built from the urls
+    // WHERE urls.ID = 21 or urls.ID =2 or ....
+    $sql .= $whereSql;
+
+    // DB call
+    // will throw Exception if not connected to DB
+    $result = runSQL( $sql );
+
+    // process results
+    $theTags = $result -> fetch_all(MYSQLI_NUM);
+    $result -> free_result();
+    
+    return $theTags;
 }
 
 
@@ -723,7 +749,7 @@ function processTags( $rawTags ) {
 
             $safeTag = SQL_sanitize($theTag);
             if (! $safeTag) {
-                logError("INVALID TAG DETECTED: " . $theTag);
+                error_log("INVALID TAG DETECTED: " . $theTag);
                 continue;
             }
 
@@ -750,7 +776,7 @@ function processTags( $rawTags ) {
 function SQL_sanitize( $theTag ) {
 
     if (! $theTag) {
-        logError("ERROR EMPTY STRING");
+        error_log("ERROR EMPTY STRING");
         return false;
     }
 
@@ -763,7 +789,7 @@ function SQL_sanitize( $theTag ) {
 
     // too short?  too long?
     if ($len < 2 || $len > $max_tag_len ) {
-        logError("ERROR STRING LENGTH: " . $theTag);
+        error_log("ERROR STRING LENGTH: " . $theTag);
         return false;
     }
 
@@ -771,7 +797,7 @@ function SQL_sanitize( $theTag ) {
     // to prevent SQL injection attack
     // be sure not to throw away tags with spaces
     if (! ctype_alnum(str_replace(' ', '', $theTag)) ) {
-        logError("ERROR NOT ALPHANUM=" . $theTag);
+        error_log("ERROR NOT ALPHANUM=" . $theTag);
         return false;
     }
         
@@ -863,19 +889,22 @@ function removeUrl( $db_name, $ID ) {
  */
 function runSQL( $sql ) {
     
-    try {
-        $conn = getDBConnection();
-        $result = $conn->query($sql);
-        if (!$result) {
-            throw new Exception("Query failed: " . $conn->error);
-        }
-        return $result;
-    } catch (Exception $e) {
-        logError("SQL Error: " . $e->getMessage());
-        throw $e;
-    }
-}
+    // error_log("** RUNNING SQL: " . $sql);
 
+    $con = $GLOBALS['DB_CONNECTION'];
+    if ($con == null) throw new Exception("No DB connection");
+
+    $result = $con->query( $sql );
+
+    // a zero result will indicate an error
+    // NOT zero rows affected
+    if ( (! $result) || ($result == null) || ($con->error)  ) {
+        $errStr = "ERROR in SQL: " . $sql . " -> " . $con->error;
+        throw new Exception( $errStr );
+    }
+    
+    return $result;
+}
 
 
 /*
@@ -1018,17 +1047,5 @@ function storeToDB( $filename, $tags, $date ) {
         return $dateStr;
     }
     
-
-    /*
-     * Proper error logging - include timestamp, message and context
-     */
-
-    function logError($message, $context = []) {
-        error_log(json_encode([
-            'timestamp' => date('Y-m-d H:i:s'),
-            'message' => $message,
-            'context' => $context
-        ]));
-    }
 
 ?>
