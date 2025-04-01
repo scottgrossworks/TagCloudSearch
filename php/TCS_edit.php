@@ -26,8 +26,7 @@ try {
     // html form input data
     // 
     //
-    $theID = (isset($_POST['ID'])) ? $_POST['ID'] : null;
-    $urlID = SQL_sanitize( $theID );
+    $urlID = (isset($_POST['ID'])) ? $_POST['ID'] : null;
     if (! $urlID) throw new Exception( "Must supply URL ID" );
 
     $editButton = (isset($_POST['edit'])) ? $_POST['edit'] : null;
@@ -37,57 +36,46 @@ try {
     //
     // get hidden form DB login credentials
     //
-    $db_url = SQL_sanitize( $_POST['db_url']) ;
-    $db_name = SQL_sanitize( $_POST['db_name'] );
-    $db_user = SQL_sanitize( $_POST['db_user'] );
-    $db_pwd = SQL_sanitize( $_POST['db_pwd'] );
+    try {
+        $db_url = SQL_safe( $_POST['db_url'] );
+        $db_name = SQL_safe( $_POST['db_name'] );
+        $db_user = SQL_safe( $_POST['db_user'] );
+        $db_pwd = SQL_safe( $_POST['db_pwd'] );
+    } catch (Exception $e) {
+        throw new Exception("Invalid database credentials: " . $e->getMessage());
+    }
 
-    if (! ($db_url && $db_name && $db_user && $db_pwd))
-        throw new Exception("Did not receive valid DB login credentials");
-
-    
     // connect to DB
     //
-    connectToDB( $db_url, 
+    connectToDB( $db_name,
+                 $db_url, 
                  $db_user,
                  $db_pwd );  
 
-    $GLOBALS["DB_NAME"] = $db_name;
     if (! isDBInit( $db_name )) throw new Exception("Database $db_name not initialized");
     // DB MUST BE initialized, tables and stored functions exist
 
-
-    
     if ($deleteButton) {
-        
         echo "<BR>DELETING POST: $urlID";
-
         // remove any tags assoc with this urlID
         removeTags( $db_name, $urlID );
-
         // remove the url
         $success = removeUrl( $db_name, $urlID );
-
         if ($success) {
             echo "<BR>SUCCESS DELETED url ID=$urlID";
-
         } else {
             echo "<BR>DELETE FAILED, ID NOT FOUND=$urlID";
         }
-       
-    
     } else { //editButton
-
         echo "<BR>EDITING POST: $urlID";
         
-       // make sure the url ID exists
-       $sql = "SELECT * FROM $db_name.urls WHERE ID=$urlID;";
-       $result = runSQL( $sql );
-
-       $ID_found = $result->fetch_array(MYSQLI_NUM);
-       if (! $ID_found) throw new Exception("URL ID not found: $urlID");
+        // make sure the url ID exists
+        $sql = "SELECT * FROM $db_name.urls WHERE ID=$urlID;";
+        $result = runSQL( $sql );
+        $ID_found = $result->fetch_array(MYSQLI_NUM);
+        if (! $ID_found) throw new Exception("URL ID not found: $urlID");
         
-        // these are the NEW tags
+        // these are the NEW tags - now we can process them since DB is connected
         $rawTags = $_POST['tags'];
         $newTags = processTags( $rawTags );
         

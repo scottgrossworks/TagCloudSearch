@@ -72,6 +72,7 @@ function sendReturnData( $theTags, $theUrls, $errStr ) {
 /*
  *  INCOMING HTTP POST request from TagCloudSearch UI inside html page
  *  ....
+ *  runs with hardcoded DB credentials, unlike the CMS tools edit/post
  *  RUN THE CODE!
  * 
  */

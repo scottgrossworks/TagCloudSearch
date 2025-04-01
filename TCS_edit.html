@@ -13,37 +13,30 @@
         <div>
             <h1>DEL /Edit DB post -- doesn't change .html</h1>
             
-
             <div id="tcs_credentials"></div>
 
             <BR>
             <BR>
 
             <form action="./php/TCS_edit.php" method="post">
-
-
-
                 <!-- ----------------------------- 
                      PUT DB LOGIN CREDENTIALS HERE 
                    ----------------------------- -->
-                <input type="hidden" id="tcs_db_url" name="db_url" value="XXX.XXX.XXX.XXX">
-                <input type="hidden" id="tcs_db_name" name="db_name" value="XXXXXXXX">
-                <input type="hidden" id="tcs_db_user" name="db_user" value="XXXXXX">
-                <input type="hidden" id="tcs_db_pwd" name="db_pwd" value="XXXXXXXXXX">
-
-                   
-
+                <input type="hidden" id="tcs_db_url" name="db_url" value="107.180.24.253">
+                <input type="hidden" id="tcs_db_name" name="db_name" value="sgw_tcs_4_2022">
+                <input type="hidden" id="tcs_db_user" name="db_user" value="tcs_user">
+                <input type="hidden" id="tcs_db_pwd" name="db_pwd" value="tcs_pwd">
+                <!-- ----------------------------- -->
             
                 <div class="row">
-                <div class="column _3">URL ID: <input id="tcs_urlID" type="text" name="ID"/></div>
-                <div class="column _auto"></div>
+                    <div class="column _3">URL ID: <input id="tcs_urlID" type="text" name="ID" required placeholder="Enter URL ID"/></div>
+                    <div class="column _auto"></div>
                 </div>
 
                 <br />
               
-                <p>TAGS: <br /><input class="tcs_txtInput" type="text" name="tags" /></p>
+                <p>TAGS: <br /><input class="tcs_txtInput" type="text" name="tags" required placeholder="Enter tags (comma-separated)" /></p>
                 <br />
-
 
                 <!-- DELETE OR UPDATE -->
                 <div class="row">
@@ -58,10 +51,7 @@
             <br />
         </div>
 
-
-
         <script>
-            
             /*
              * SHOW login credentials
              */
@@ -78,8 +68,6 @@
             
             let db_pwd = document.getElementById("tcs_db_pwd");
             theDiv.innerHTML += ( db_pwd.name + ": " + db_pwd.value + "<BR>");
-
         </script>
-
     </body>
 </html>

@@ -11,11 +11,9 @@
  * Create a new DATABASE, TABLES, and STORED FUNCTIONS
  */
 function initialize( $db_name, $db_url, $db_user, $db_pwd ) {
-
  
     if ( isDBConnected() && isDBInit( $db_name ) ) {
-        echo "<BR>" . $GLOBALS["DB_NAME"] . " IS ALREADY INITIALIZED";
-        return;
+        throw new Exception("<BR>" . $GLOBALS["DB_NAME"] . " IS ALREADY INITIALIZED");
     }
 
     // MUST HAVE ADMIN PRIVLEGES TO CREATE DB
@@ -23,32 +21,34 @@ function initialize( $db_name, $db_url, $db_user, $db_pwd ) {
     // some of these are mandatory -- will throw exception later if empty
     //
 
-    if ( ($db_name == null) || 
-        ($db_url == null) || 
-        ($db_user == null) || 
-        ($db_pwd == null) ) {
-
+    if (!  ($db_name && $db_url && $db_user && $db_pwd) ) {
         throw new Exception("ALL 4 DB login fields must != null");
     } 
 
-    $GLOBALS[ 'DB_NAME' ] = $db_name;
+    try {
+        $GLOBALS[ 'DB_NAME' ] = SQL_safe( $db_name );
         
-    $GLOBALS[ 'DB_URL' ] = $db_url;
+        $GLOBALS[ 'DB_URL' ] = SQL_safe( $db_url );
 
-    $GLOBALS[ 'DB_USER' ] = $db_user;
-   
-    $GLOBALS[ 'DB_PWD' ] = $db_pwd;
+        $GLOBALS[ 'DB_USER' ] = SQL_safe( $db_user );
     
+        $GLOBALS[ 'DB_PWD' ] = SQL_safe( $db_pwd );
+
+
+    } catch (Exception $error) {
+        throw new Exception("<BR>ERROR READING LOGIN CREDENTIALS: " . $error->getMessage());
+    }
+
     // echo login credentials
     printDBLogin();
 
     // open connection to database
-    connectToDB( $db_url, $db_user, $db_pwd );
+    connectToDB( $GLOBALS['DB_URL'], $GLOBALS['DB_USER'],  $GLOBALS[ 'DB_PWD' ] );
 
     // create database tables and stored functions
     // stores flag in config table to indicate db initialized
     // rewrite existing table/function definitions
-    initDB( $db_name );
+    initDB( $GLOBALS['DB_NAME'] );
 }
 
 
@@ -75,7 +75,7 @@ function initialize( $db_name, $db_url, $db_user, $db_pwd ) {
         initialize( $db_name, $db_url, $db_user, $db_pwd );
 
     } catch (Exception $error) {
-        die("<BR>TCS ERROR: " . $error->getMessage());
+        die("<BR>TCS ERROR: ABORTING DB INITIALIZATION<BR>" . $error->getMessage());
     }
 
     

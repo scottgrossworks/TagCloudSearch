@@ -33,14 +33,16 @@ $MAX_TAG_LENGTH = 15;
 function getDBConnection() {
    
     if (! isset($GLOBALS["DB_CONNECTION"])) {
-        throw new Exception("No database connection available");
+        error_log("No database connection available");
+        return null;
     }
 
     $con = $GLOBALS["DB_CONNECTION"];
     
     // Select the DB if not already selected
     if (! $con->select_db($GLOBALS["DB_NAME"])) {
-        throw new Exception("Cannot select DB: " . $GLOBALS["DB_NAME"]);
+        error_log("Cannot select DB: " . $GLOBALS["DB_NAME"]);
+        return null;
     }
 
     return $con;
@@ -555,6 +557,7 @@ function getUrls_matchAllTags($rawTags) {
     // Sanitize input tags to prevent SQL injection
     $sanitizedTags = [];
     foreach ($searchTags as $tag) {
+
         $safeTag = SQL_sanitize($tag);
         if ($safeTag) {
             $sanitizedTags[] = $safeTag;
@@ -681,7 +684,7 @@ function getTagsFromUrls($theUrls) {
         $stmt->close();
         
         return $theTags;
-        
+       
     } catch (Exception $e) {
         logError("Error in getTagsFromUrls: " . $e->getMessage());
         throw $e;
@@ -704,49 +707,60 @@ function processTags( $rawTags ) {
         return $finalTags;
     }
    
-    $tags = [];
-    if ($rawTags[0] == '#') {
-        $tags = explode("#", $rawTags);
-    
-        // does $tags also contain commas?
-        if (str_contains( $rawTags, ",")) {
-            $newTags = explode(",", $tags[1]);
-            $tags = $newTags;
-        }
 
-    } else {
-        $tags = explode(",", $rawTags);
-    }
+    // Split tags by commas or hashtags
+    $tags = preg_split('/[#,]+/', $rawTags, -1, PREG_SPLIT_NO_EMPTY);
 
-    // now convert tags into finalTags by removing any
-    // empty strings and sorting
     if (count($tags) == 0) {
-        throw new Exception("tags cannot be parsed");
-
-    } else {
-
-        $index = 0;
-        foreach($tags as $theTag) {
-
-            $safeTag = SQL_sanitize($theTag);
-            if (! $safeTag) {
-                logError("INVALID TAG DETECTED: " . $theTag);
-                continue;
-            }
-
-            // add the tag
-            $finalTags[ $index ] = $safeTag;
-            $index++;
-     
-        }
-        
-        asort( $finalTags, SORT_STRING);
+        throw new Exception("Tags cannot be parsed");
     }
 
-    // printTags( $finalTags );
+    foreach ($tags as $theTag) {
+        $safeTag = SQL_sanitize($theTag);
+        if (!$safeTag) {
+            logError("INVALID TAG DETECTED: " . $theTag);
+            continue;
+    }
+
+        $finalTags[] = $safeTag;
+
+    }
+
+    asort($finalTags, SORT_STRING);
+    $finalTags = array_unique($finalTags); // remove duplicates
     return $finalTags;
 }
 
+
+
+/*
+ * SANITIZE database credentials
+ * throws Exception if validation fails
+ */
+function SQL_safe( $theCred ) {
+
+    if (! $theCred) {
+        logError("ERROR EMPTY CREDENTIAL");
+        throw new Exception("Empty database credential");
+    }
+
+    $theCred = trim($theCred);
+    $len = strlen($theCred);
+
+    // too short?
+    if ($len < 2) {
+        logError("ERROR CREDENTIAL LENGTH: " . $theCred);
+        throw new Exception("Invalid credential length");
+    }
+
+    // Basic SQL injection prevention
+    if (in_array($theCred, $GLOBALS['BLACKLIST'])) {
+        logError("ERROR BLACKLISTED CREDENTIAL: " . $theCred);
+        throw new Exception("Invalid credential");
+    }
+
+    return $theCred;
+}
 
 
 /*
@@ -762,10 +776,8 @@ function SQL_sanitize( $theTag ) {
     }
 
     $max_tag_len = $GLOBALS['MAX_TAG_LENGTH'];
-    $the_db = $GLOBALS['DB_CONNECTION'];
 
     $theTag = trim(strtolower($theTag));
-
     $len = strlen($theTag);
 
     // too short?  too long?
@@ -783,8 +795,13 @@ function SQL_sanitize( $theTag ) {
     }
         
     if (in_array($theTag, $GLOBALS['BLACKLIST'])) return false;
-
-    $safeTag = $the_db->real_escape_string($theTag);
+    
+    $the_db = getDBConnection();
+    if ($the_db) {
+        $safeTag = $the_db->real_escape_string($theTag);
+    } else {
+        $safeTag = htmlspecialchars($theTag, ENT_QUOTES, 'UTF-8');
+    }
 
     return $safeTag;
 }
@@ -827,7 +844,7 @@ function removeTags( $db_name, $urlID ) {
         $oldTags = $result->fetch_all(MYSQLI_NUM); // these are the tagNames we --popularity
         $result -> free_result();
 
-        $theDB = $GLOBALS['DB_CONNECTION'];
+        $theDB = getDBConnection();
         $len = sizeof($oldTags);
         $i = 0;
         for ($i; $i < $len; $i++) {
@@ -896,7 +913,7 @@ function runSQL( $sql ) {
 function storeToDB( $filename, $tags, $date ) {
 
     $db_name = $GLOBALS['DB_NAME'];
-    $theDB = $GLOBALS['DB_CONNECTION'];
+    $theDB = getDBConnection();
 
     $safeFilename = $theDB->real_escape_string($filename);
     $safeDate = $theDB->real_escape_string($date);
@@ -941,7 +958,7 @@ function storeToDB( $filename, $tags, $date ) {
      */
     function closeConnection() {
 
-        $con = $GLOBALS['DB_CONNECTION'];
+        $con = getDBConnection();
 
         if ($con == null) {
             throw new Exception("Not connected to DB");

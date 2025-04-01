@@ -116,18 +116,22 @@ try {
         throw new Exception("Did not receive POST request");
     }
 
-    $theDB = getDBConnection();
-
     //
     // get hidden form DB login credentials
     //
-    $db_url = SQL_sanitize( $_POST['db_url'] );
-    $db_name = SQL_sanitize( $_POST['db_name'] );
-    $db_user = SQL_sanitize( $_POST['db_user'] );
-    $db_pwd = SQL_sanitize( $_POST['db_pwd'] );
+    try {
+        $db_url = SQL_safe( $_POST['db_url'] );
+        $db_name = SQL_safe( $_POST['db_name'] );
+        $db_user = SQL_safe( $_POST['db_user'] );
+        $db_pwd = SQL_safe( $_POST['db_pwd'] );
+    } catch (Exception $e) {
+        throw new Exception("Invalid database credentials: " . $e->getMessage());
+    }
 
-    if (! ($db_url && $db_name && $db_user && $db_pwd))
-        throw new Exception("Did not receive valid DB login credentials");
+    echo "<BR>DB_URL: $db_url";
+    echo "<BR>DB_NAME: $db_name";
+    echo "<BR>DB_USER: $db_user";
+    echo "<BR>DB_PWD: $db_pwd"; 
 
     $GLOBALS["DB_URL"] = $db_url;
     $GLOBALS["DB_NAME"] = $db_name;
@@ -139,18 +143,22 @@ try {
     // html form input data
     // some of these are mandatory -- will throw exception later if empty
     //
-    $url = SQL_sanitize( $_POST['url'] );
-    $caption = SQL_sanitize( $_POST['caption'] );
-    $date = SQL_sanitize( $_POST['date'] );
-    $folder = SQL_sanitize( $_POST['folder'] );
-    $rawTags = SQL_sanitize( $_POST['tags'] );
-    $tags = processTags( $rawTags );
-
+    $url = $_POST['url'];
+    $caption = $_POST['caption'];
+    $date = $_POST['date'];
+    $folder = $_POST['folder'];
+    
     if (! ($url && $caption && $folder) ) {
         throw new Exception("FORM must include at least URL, CAPTION, and root FOLDER");
     } else if (! $date) {
         $date = todaysDate();
     }
+
+    // Tags use SQL_sanitize since they go into SQL queries
+    $rawTags = SQL_sanitize( $_POST['tags'] );
+    $tags = processTags( $rawTags );
+
+
     
     echo "TCS_post<BR>...";
  
@@ -171,7 +179,8 @@ try {
 
     // connect to DB
     //
-    connectToDB( $db_url, 
+    connectToDB( $db_name,
+                 $db_url, 
                  $db_user,
                  $db_pwd );  
 
