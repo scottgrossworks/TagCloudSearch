@@ -2,6 +2,20 @@
 <html>
 <body>
 
+<!--
+//
+//
+// TCS_edit.php
+//
+// 4/1/24: FIXME:  does NOT edit the actual .html files -- you still have to go to the
+// file indicated by the URL_ID and create your own new_tag bricks inside TCS_bricks
+//
+//  <ul class='TCS_bricks'>
+//            <li class='TCS_inactive'>new tag_1</li>
+//            <li class='TCS_inactive'>new_tag_2</li>
+//
+-->
+
 <!-- begin PHP -->
 <?php require './TCS_dbTools.php'; 
       
@@ -41,6 +55,7 @@ try {
         $db_name = SQL_safe( $_POST['db_name'] );
         $db_user = SQL_safe( $_POST['db_user'] );
         $db_pwd = SQL_safe( $_POST['db_pwd'] );
+
     } catch (Exception $e) {
         throw new Exception("Invalid database credentials: " . $e->getMessage());
     }
