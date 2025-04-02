@@ -155,13 +155,12 @@ try {
     }
 
     // Tags use SQL_sanitize since they go into SQL queries
-    $rawTags = SQL_sanitize( $_POST['tags'] );
+    $rawTags = $_POST['tags']; 
     $tags = processTags( $rawTags );
-
+    
 
     
-    echo "TCS_post<BR>...";
- 
+    echo "TCS_post<BR>..."; 
     echo "<BR>URL: $url";
     echo "<BR>CAPTION: $caption";
     echo "<BR>DATE: $date";

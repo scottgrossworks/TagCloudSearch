@@ -33,7 +33,6 @@ $MAX_TAG_LENGTH = 15;
 function getDBConnection() {
    
     if (! isset($GLOBALS["DB_CONNECTION"])) {
-        error_log("No database connection available");
         return null;
     }
 
@@ -116,14 +115,14 @@ function createDB( $con, $DB_name ) {
         $dbCreated = $con->query( $sql );
         if (! $dbCreated) throw new Exception("Failed to create DB: $DB_name");
 
-        // echo "<BR>EXECUTED: $sql";
+        // debug_log("EXECUTED: $sql");
 
         // make this the selected DB
         if (! $con->select_db($DB_name)) {
             throw new Exception("Could not select DB: " . $con->error);
         }
 
-        // echo "<BR>$DB_name IS SELECTED DB";
+        // debug_log("$DB_name IS SELECTED DB");
 
     } catch (Exception $error) {
 
@@ -542,30 +541,12 @@ function getUrlsFromTags( $tags ) {
 * temporary tables, improving performance and ensuring compatibility 
 * with shared hosting environments like GoDaddy.
 *
-* @param array $rawTags     The string of tags passed in from the client
+* @param array              $safeTags processed for SQL safety in caller   
 * @return array             An array of associative arrays representing the matched URLs.
 * [ [1, '/TCS_POSTS/12121.html'], [2, '/TCS_POSTS/12345.html'], ... ]
 * @throws Exception         If no tags are provided, or if DB is not properly configured.
 */
-function getUrls_matchAllTags($rawTags) {
-    $searchTags = processTags( $rawTags );
-
-    if (empty($searchTags)) {
-        throw new Exception("Empty tags passed to getUrlsFromTags()");
-    }
-
-    // Sanitize input tags to prevent SQL injection
-    $sanitizedTags = [];
-    foreach ($searchTags as $tag) {
-
-        $safeTag = SQL_sanitize($tag);
-        if ($safeTag) {
-            $sanitizedTags[] = $safeTag;
-        }
-    }
-    if (count($sanitizedTags) == 0) {
-        return [];
-    }
+function getUrls_matchAllTags($safeTags) {
 
     try {
         // Get database connection
@@ -576,10 +557,10 @@ function getUrls_matchAllTags($rawTags) {
         
         // Add JOIN clauses with placeholders
         $params = [];
-        $types = str_repeat('s', count($sanitizedTags)); // 's' for string parameters
+        $types = str_repeat('s', count($safeTags)); // 's' for string parameters
         $joinClauses = '';
         
-        foreach ($sanitizedTags as $index => $tag) {
+        foreach ($safeTags as $index => $tag) {
             $joinClauses .= " INNER JOIN tags2urls t{$index} ON urls.ID = t{$index}.ID AND t{$index}.tagName = ?";
             $params[] = $tag;
         }
@@ -703,31 +684,30 @@ function processTags( $rawTags ) {
 
     $finalTags = [];
 
-    if ( $rawTags == null || $rawTags == "" ) {
+    if ( ! $rawTags || $rawTags == "" ) {
         return $finalTags;
     }
    
-
-    // Split tags by commas or hashtags
-    $tags = preg_split('/[#,]+/', $rawTags, -1, PREG_SPLIT_NO_EMPTY);
+    // Split tags by commas and trim whitespace
+    $tags = array_map('trim', preg_split('/[#,]+/', $rawTags, -1, PREG_SPLIT_NO_EMPTY));
 
     if (count($tags) == 0) {
+        logError("processTags(): NO TAGS FOUND");
         throw new Exception("Tags cannot be parsed");
     }
 
     foreach ($tags as $theTag) {
-        $safeTag = SQL_sanitize($theTag);
-        if (!$safeTag) {
-            logError("INVALID TAG DETECTED: " . $theTag);
-            continue;
+        if (strlen($theTag) > 0) {  // Skip empty tags
+            $safeTag = SQL_sanitize($theTag);
+            if (!$safeTag) {
+                logError("INVALID TAG DETECTED: " . $theTag);
+                continue;
+            }
+            $finalTags[] = $safeTag;
+        }
     }
 
-        $finalTags[] = $safeTag;
-
-    }
-
-    asort($finalTags, SORT_STRING);
-    $finalTags = array_unique($finalTags); // remove duplicates
+    $finalTags = array_unique($finalTags, SORT_STRING); // remove duplicates
     return $finalTags;
 }
 
@@ -775,13 +755,11 @@ function SQL_sanitize( $theTag ) {
         return false;
     }
 
-    $max_tag_len = $GLOBALS['MAX_TAG_LENGTH'];
-
     $theTag = trim(strtolower($theTag));
     $len = strlen($theTag);
 
     // too short?  too long?
-    if ($len < 2 || $len > $max_tag_len ) {
+    if ($len < 2 || $len > $GLOBALS['MAX_TAG_LENGTH'] ) {
         logError("ERROR STRING LENGTH: " . $theTag);
         return false;
     }
@@ -808,21 +786,29 @@ function SQL_sanitize( $theTag ) {
 
 
 
+
+/*
+ * helper function
+ */
+function debug_log($msg) {
+    // error_log("[TCS_DEBUG] " . $msg . "\n", 3, __DIR__ . "/tcs_debug.log");
+    echo("[TCS_DEBUG] " . $msg);
+}
+
 /*
  * helper function
  */
 function printTags( $tags ) {
-    echo "<BR>PRINTING TAGS";
+    debug_log("PRINTING TAGS");
     
     $index = 0; 
     foreach($tags as $eachTag) {
         
         $len = strlen($eachTag);
-        echo "<BR>TAGS[$index]==$eachTag==" . $len;
+        debug_log( "TAGS[$index]==$eachTag==" . $len );
         
         $index++;
     }
-    echo "<BR>";
 }
 
 
@@ -854,11 +840,11 @@ function removeTags( $db_name, $urlID ) {
 
             $sql = "DELETE FROM $db_name.tags2urls WHERE tagName='$safeTag' AND ID=$urlID";
             runSQL( $sql );
-            // echo "<BR>DELETED TAG=$eachTag";
+            debug_log("DELETED TAG=$eachTag");
   
             $sql = "SELECT $db_name.tcs_lessPopular('$safeTag')";  
             runSQL( $sql );       
-            // echo "<BR>LESS POPULAR=$eachTag";     
+            debug_log("LESS POPULAR=$eachTag");     
         }
 
 }
@@ -910,43 +896,46 @@ function runSQL( $sql ) {
  *
  * returns new unique file ID
  */
-function storeToDB( $filename, $tags, $date ) {
+function storeToDB($filename, $tags, $date) {
+    try {
+        $db_name = $GLOBALS['DB_NAME'];
+        $theDB = getDBConnection();
+        if (!$theDB) {
+            throw new Exception("No database connection");
+        }
 
-    $db_name = $GLOBALS['DB_NAME'];
-    $theDB = getDBConnection();
+        // Start transaction for atomicity
+        $theDB->begin_transaction();
 
-    $safeFilename = $theDB->real_escape_string($filename);
-    $safeDate = $theDB->real_escape_string($date);
-    
+        // Store URL and get ID
+        $sql = "SELECT $db_name.tcs_storeNewUrl(?, ?)";
+        $stmt = $theDB->prepare($sql);
+        $stmt->bind_param("ss", $filename, $date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $newID = $result->fetch_array(MYSQLI_NUM)[0];
+        $stmt->close();
 
-    /*
-     * will throw an Exception if not connected to DB
-     * creates new row in urls table or updates existing info
-     * returns unique ID for url 
-     */
-    $sql = "SELECT $db_name.tcs_storeNewUrl('$safeFilename','$safeDate')";
+        // Store tags
+        $tagStmt = $theDB->prepare("SELECT $db_name.tcs_createNewTag(?, ?)");
+        foreach ($tags as $tag) {
+            $tagStmt->bind_param("is", $newID, $tag);
+            $tagStmt->execute();
+        }
+        $tagStmt->close();
 
-    $result = runSQL( $sql );
-   
-    $newID = $result->fetch_array(MYSQLI_NUM)[0];
+        // Commit all changes
+        $theDB->commit();
+        
+        return $newID;
 
-    $result -> free_result();
-
-
-     /*
-      * for each tag to be assoc. with filename .html
-      * tags: create new tag or increment popularity
-      * tags2urls: create new mapping tag --> ID from tcs_storeNewUrl
-      */
-    foreach ($tags as $eachTag) {
-
-        $safeTag = $theDB->real_escape_string($eachTag);
-        $sql = "SELECT $db_name.tcs_createNewTag($newID,'$safeTag')";
-        runSQL( $sql );
+    } catch (Exception $e) {
+        error_log("ERROR STORING TO DB: " . $e->getMessage());
+        if ($theDB) {
+            $theDB->rollback();
+        }
+        throw $e;
     }
-
-    return $newID;
-
 }
 
 
@@ -1010,6 +999,7 @@ function storeToDB( $filename, $tags, $date ) {
         $GLOBALS["DB_USER"] = $DB_user;
         $GLOBALS["DB_PWD"] = $DB_pwd;
 
+        debug_log( "CONNECTED TO DB: " . $DB_name );
     }
     
     
@@ -1028,11 +1018,11 @@ function storeToDB( $filename, $tags, $date ) {
         $db_user = $GLOBALS[ 'DB_USER' ] ;
        
         $db_pwd = $GLOBALS[ 'DB_PWD' ];
-    
-        echo "<BR>DB_NAME: " . $db_name;
-        echo "<BR>DB_URL: " . $db_url;
-        echo "<BR>DB_USER: " . $db_user;
-        echo "<BR>DB_PWD: " . $db_pwd;
+
+        debug_log("DB_NAME: " . $db_name);
+        debug_log("DB_URL: " . $db_url);
+        debug_log("DB_USER: " . $db_user);
+        debug_log("DB_PWD: " . $db_pwd);
 
     }
 

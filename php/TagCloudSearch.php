@@ -44,6 +44,9 @@ $DB_PWD = "tcs_pwd";
  */
 function sendReturnData( $theTags, $theUrls, $errStr ) {
 
+    // Ensure no output before headers
+    if (ob_get_length()) ob_clean();
+
     header('Content-Type: application/json; charset=utf-8');
 
     if ($errStr != null) {
@@ -64,6 +67,7 @@ function sendReturnData( $theTags, $theUrls, $errStr ) {
     }
 
     echo json_encode( $response );
+    exit(); // Ensure no additional output
 }
 
 
@@ -82,7 +86,6 @@ try {
         throw new Exception("Did not receive POST request");
     }
 
-    
     // connect to DB
     //
     connectToDB( $DB_NAME,
@@ -91,7 +94,9 @@ try {
                  $DB_PWD );  
 
                  
-    if (! isDBInit( $DB_NAME )) throw new Exception("Database $DB_NAME not initialized");
+    if (! isDBInit( $DB_NAME )) {
+        throw new Exception("Database $DB_NAME not initialized");
+    }
     // DB MUST BE initialized, tables and stored functions exist
 
 
@@ -101,25 +106,34 @@ try {
     //
     $rawTags = $_POST['tcs_tags'];
 
-    // 03/2025 -- new, faster SQL query with INNER JOINs for each tag
-    // must match ALL tag bricks    
-    $theUrls = getUrls_matchAllTags( $rawTags );
-    // [ [ index, url ], [index, url], .... ]
-    // may be empty
 
-    
-    //
-    // theUrls -- [ID][tagName][date]
-    //
-    // echo "<BR>GOT URLS FROM DB!!!";
-    // foreach( $theUrls as $eachRow ) {
-    //     echo "<BR>$eachRow[0] -- $eachRow[1]";
-    // }
-    //
-    // $theTags = [tag][popularity]
     $theTags = []; // empty array - no tags
-    if (count($theUrls) > 0) {
-        $theTags = getTagsFromUrls( $theUrls );
+    $theUrls = []; // empty array - no urls
+
+    // Sanitize input tags to prevent SQL injection
+    $safeTags = processTags( $rawTags );
+    if (count($safeTags) == 0) {
+        logError("NO TAGS FOUND: " . $rawTags);
+        
+    } else {
+        
+        $theUrls = getUrls_matchAllTags( $safeTags );
+
+        // [ [ index, url ], [index, url], .... ]
+        // may be empty
+        //
+        // theUrls -- [ID][tagName][date]
+        //
+        // echo "<BR>GOT URLS FROM DB!!!";
+        // foreach( $theUrls as $eachRow ) {
+        //     echo "<BR>$eachRow[0] -- $eachRow[1]";
+        // }
+        //
+        // $theTags = [tag][popularity]
+
+        if (count($theUrls) > 0) {
+            $theTags = getTagsFromUrls( $theUrls );
+        }
     }
 
     closeConnection();

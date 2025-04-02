@@ -1,0 +1,5 @@
+[02-Apr-2025 19:46:55 UTC] PHP Warning:  Undefined variable $sanitizedTags in /home/scottgrossworks/public_html/TagCloudSearch/php/TagCloudSearch.php on line 111
+[02-Apr-2025 19:46:55 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /home/scottgrossworks/public_html/TagCloudSearch/php/TagCloudSearch.php:111
+Stack trace:
+#0 {main}
+  thrown in /home/scottgrossworks/public_html/TagCloudSearch/php/TagCloudSearch.php on line 111
