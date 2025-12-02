@@ -24,7 +24,7 @@ $DB_USER = null;
 $DB_PWD = null;
 $GLOBALS["BLACKLIST"] = ['select', 'drop', 'insert', 'update', 'delete'];
 
-$MAX_TAG_LENGTH = 15;
+$MAX_TAG_LENGTH = 20;
 
 
 /*

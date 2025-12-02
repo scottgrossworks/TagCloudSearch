@@ -23,7 +23,7 @@ import { validateTAGS } from "./TagCloudSearch_IO.js";
 // GLOBAL DATA STRUCTURES
 //
 */
-export const MAX_TAG_LENGTH = 15; // chars 
+export const MAX_TAG_LENGTH = 20; // chars 
 
 /*
 * TOTAL_TAGS = [][]
