@@ -144,17 +144,18 @@ import { searchButtonListener_callback,
     */
     export function TCS_getNewPosts( theResults, theUrls ) {
         
-        if (theUrls == null || theUrls.length == 0) {
+        if (theUrls == null) {
             throw new Error("null URLS passed to TCS_getNewPosts()");
         }
 
+        if (theUrls.length == 0) {
+            throw new Error("empty URLS passed to TCS_getNewPosts()");
+        }
 
         // clear the current blog posts to make way for the new results
         theResults.innerHTML = "";
 
         theUrls.forEach( eachUrl => {
-                // DEBUGGING
-                // console.log(eachUrl);
                 TCS_getSinglePost( theResults, eachUrl[1] );
         });
 
@@ -169,8 +170,7 @@ import { searchButtonListener_callback,
     */
     export function TCS_getSinglePost( theResults, theURL ) {
 
-        // DEBUGGING 
-        //console.log("TCS_getSinglePost: " + theURL);
+        // console.log("GET: " + theURL);
         // use try/catch -- do not let one 404 spoil the bunch
         try {
                 let request = new XMLHttpRequest();

@@ -399,19 +399,26 @@ export function searchButtonListener_callback(searchBar, event) {
     // read the value from the search bar?
     let searchTxt = searchBar.innerHTML;
 
-    if ( (searchTxt == null) || (searchTxt == "") )  { 
+    // Skip if this is the welcome message
+    if (searchBar.classList.contains("welcome")) {
+        searchBar.classList.remove("welcome");
+        searchBar.innerHTML = "";
+        searchTxt = "";
+    }
+
+    if ( (searchTxt == null) || (searchTxt == "") )  {
 
         // no search text, look for bricks
         if (SEARCH_TAGS.length == 0) {
-            // no bricks either? 
+            // no bricks either?
             // no tags inserted using addSearchText
             return
         }
-        
-        // else 
+
+        // else
         // the bricks will already be added to SEARCH_TAGS
         // sendSearchToServer will read SEARCH_TAGS
-        
+
 
     } else {
         // add whatever is in the search bar to SEARCH_TAGS
@@ -492,11 +499,11 @@ function normalCursor() {
 
 
 /*
- * does the search bar input contain only valid alphanumeric chars 
+ * does the search bar input contain only valid alphanumeric chars, spaces, and hyphens
  */
 function isAlphaNum( text ) {
 
-    const letterNumber = /^[0-9a-zA-Z\s]+$/;
+    const letterNumber = /^[0-9a-zA-Z\s\-]+$/;
     return (text.match( letterNumber ));
 }
     

@@ -79,8 +79,8 @@ export function TCS_init() {
         SEARCH_URL = TCS_main.getAttribute("search-url");
         if (SEARCH_URL == null) {
             throw new Error("TCS_main must include a 'search-url' attribute");
-        } else if (!SEARCH_URL.startsWith("http://")) {
-            throw new Error("search-url must start with 'http://'");
+        } else if (! (SEARCH_URL.startsWith("http://") || SEARCH_URL.startsWith("https://"))) {
+            throw new Error("search-url must start with 'http://' or 'https://'");
         }
 
         initTags(TCS_main);
