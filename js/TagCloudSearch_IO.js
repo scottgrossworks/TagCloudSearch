@@ -57,7 +57,9 @@ import {  MAX_TAG_LENGTH,
 export async function sendSearchToServer() {
     if (SEARCH_TAGS.length == 0) throw new Error("Cannot send empty SEARCH_TAGS to server");
 
-    let formData = SEARCH_TAGS.join(',');
+    // Lowercase all tags before sending to server (database stores tags in lowercase)
+    let lowercaseTags = SEARCH_TAGS.map(tag => tag.toLowerCase());
+    let formData = lowercaseTags.join(',');
 
     try {
         const response = await fetch( SEARCH_URL, {
