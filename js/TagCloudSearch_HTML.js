@@ -82,18 +82,31 @@ import { searchButtonListener_callback,
     */
     export function TCS_searchForTags( tags ) {
 
-        if (tags == null) throw new Error("null argument to TCS_searchForTags"); 
-        
+        if (tags == null) throw new Error("null argument to TCS_searchForTags");
+
         if (tags.length == 0) throw new Exception("Empty tags sent to TCS_searchForTags");
+
+        // Ensure the search column is visible before performing search
+        // This fixes the issue where masthead links don't show results when search column is hidden
+        let searchColumn = document.getElementById("search_column");
+        if (searchColumn != null && searchColumn.classList.contains("TCS_hidden")) {
+            searchColumn.classList.replace("TCS_hidden", "TCS_showing");
+        }
+
+        // Clear previous results to provide a clean slate for new search
+        let resultsWrapper = document.getElementById("results_wrapper");
+        if (resultsWrapper != null) {
+            resultsWrapper.innerHTML = "";
+        }
 
         // clear search
         // resetSearch("");
 
         // reload search tags
-        tags.forEach( eachTag => { 
+        tags.forEach( eachTag => {
             addSearchText(eachTag) }
         );
-    
+
         // simulate push on search button
         const searchBar = document.getElementById("TCS_searchInput");
         searchButtonListener_callback(searchBar, null);
