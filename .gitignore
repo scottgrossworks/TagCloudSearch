@@ -1,0 +1,7 @@
+# real database login -- never commit
+php/tcs_config.php
+
+# server logs / scratch
+error_log
+*.log
+php/TMP/

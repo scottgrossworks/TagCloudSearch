@@ -1,0 +1,49 @@
+
+ /* GLOBAL VARIABLES */
+ :root {
+     --BRICK_BASE: blue;
+     --BRICK_POST: rgb(1, 102, 255);
+     --BRICK_ACTIVE: green;
+     --BRICK_ACTIVE_LIGHT: rgb(6, 158, 6);
+     
+     --BRICK_TEXT: white;
+ 
+     --PRIMARY_BKG: rgb(200, 230, 255);
+     --PRIMARY_COLOR: white;
+ 
+     --DATE_BKG: rgb(200, 230, 255);
+     --DATE_COLOR: black;
+ 
+     --CAPTION_BKG:rgba(250, 250, 250);
+     --CAPTION_COLOR:rgba(50, 50 ,50);
+ 
+     --POST_BKG: rgba(210,210,210);
+     --POST_COLOR:black;
+ 
+     --SEARCH_BKG: transparent;
+     --SEARCH_COLOR: black;
+ 
+     --TIER_COLOR: lightslategray;
+ 
+
+     --DATE_FONT-FAMILY:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+     --CAPTION_FONT_FAMILY:Verdana, Geneva, Tahoma, sans-serif;
+     --PRIMARY_FONT-FAMILY: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+ 
+
+     --PRIMARY_FONT-SIZE: 0.85em;
+     --PRIMARY_FONT-WEIGHT: 600;
+ 
+     --SMALL_FONT-SIZE: 0.8em;
+     --SMALL_FONT-WEIGHT: 500;
+ 
+     --MOBILE_FONT-SIZE: 0.9em;
+     --MOBILE_FONT-WEIGHT: 500;
+
+
+
+} /* end */
+    
+    
+ 

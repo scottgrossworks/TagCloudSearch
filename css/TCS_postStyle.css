@@ -1,0 +1,58 @@
+/* 
+ * Include root containing global var() declarations 
+ */
+@import "./TCS_styles.css";
+
+*, html {
+
+padding:5px;
+
+}
+
+
+.tcs_txtInput {
+    width: 80vw;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: whitesmoke;
+}
+
+
+
+
+#tcs_submit {
+
+    margin: 0 auto 0 auto;
+    
+    width:100px;
+    border-radius: 10px;
+    padding: 10px 15px 10px 15px;
+    letter-spacing: 0.1rem;
+}
+
+#tcs_dateInput {
+    padding: 8px;
+    width: 25vw;
+    margin: 10px;
+    letter-spacing: 0.2rem;
+}
+
+#tcs_folderInput {
+    padding: 8px;
+    width: 25vw;
+    margin: 10px;
+    letter-spacing: 0.2rem;
+}
+
+#tcs_caption {
+    width: 85vw;
+    height: 150px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 2px solid var(--TIER_COLOR);
+    border-radius: 6px;
+    
+    background-color: whitesmoke;
+    font-size: 16px;
+    resize: none;
+}
